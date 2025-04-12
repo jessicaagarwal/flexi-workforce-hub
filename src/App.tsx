@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
+import EmployeeDashboard from "./pages/EmployeeDashboard";
 import LeaveManagement from "./pages/LeaveManagement";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
               </ProtectedRoute>
             }>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
               <Route path="/employees" element={<Employees />} />
               <Route path="/leave" element={<LeaveManagement />} />
               {/* Add other routes here as they are implemented */}

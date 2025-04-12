@@ -2,55 +2,51 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarTrigger,
-  SidebarHeader,
+  LayoutDashboard, 
+  Users, 
+  Calendar, 
+  DollarSign, 
+  TrendingUp, 
+  FileText, 
+  Clock,
+  Settings,
+  LogOut,
+  User
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter
+  SidebarMenuLink,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { 
-  Home, 
-  Users, 
-  DollarSign, 
-  Calendar, 
-  BarChart, 
-  FileText, 
-  Clock, 
-  Settings, 
-  LogOut 
-} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { cn } from '@/lib/utils';
-
-const navigation = [
-  { name: 'Dashboard', path: '/dashboard', icon: Home },
-  { name: 'Employees', path: '/employees', icon: Users },
-  { name: 'Payroll', path: '/payroll', icon: DollarSign },
-  { name: 'Leave Management', path: '/leave', icon: Calendar },
-  { name: 'Performance', path: '/performance', icon: BarChart },
-  { name: 'Documents', path: '/documents', icon: FileText },
-  { name: 'Attendance', path: '/attendance', icon: Clock },
-  { name: 'Settings', path: '/settings', icon: Settings },
-];
 
 const AppSidebar: React.FC = () => {
   const location = useLocation();
-  const { logout } = useAuth();
-
+  const { user, logout } = useAuth();
+  
+  const isActive = (path: string) => location.pathname === path;
+  
+  const isHR = user?.role === 'hr' || user?.role === 'admin';
+  
   return (
     <Sidebar>
-      <SidebarHeader className="flex h-16 items-center px-4 border-b">
-        <div className="flex items-center">
-          <span className="text-2xl font-bold text-hrms-blue">HRMS</span>
-          <span className="text-2xl font-bold text-gray-700">Pro</span>
-        </div>
-        <SidebarTrigger className="ml-auto" />
+      <SidebarHeader>
+        <Link to="/" className="flex items-center gap-2 px-2">
+          <div className="rounded-md bg-hrms-blue p-1">
+            <Users className="h-6 w-6 text-white" />
+          </div>
+          <div className="font-bold text-xl">HRMS Pro</div>
+        </Link>
       </SidebarHeader>
       
       <SidebarContent>
@@ -58,38 +54,124 @@ const AppSidebar: React.FC = () => {
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigation.map((item) => (
-                <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton asChild>
-                    <Link 
-                      to={item.path}
-                      className={cn(
-                        "flex items-center gap-3",
-                        location.pathname.startsWith(item.path) ? 
-                          "text-hrms-blue font-medium" : 
-                          "text-gray-700 hover:text-hrms-blue"
-                      )}
-                    >
-                      <item.icon size={18} />
-                      <span>{item.name}</span>
+              {isHR && (
+                <SidebarMenuItem active={isActive('/dashboard')}>
+                  <SidebarMenuLink asChild>
+                    <Link to="/dashboard">
+                      <LayoutDashboard />
+                      <span>HR Dashboard</span>
                     </Link>
-                  </SidebarMenuButton>
+                  </SidebarMenuLink>
                 </SidebarMenuItem>
-              ))}
+              )}
+              
+              <SidebarMenuItem active={isActive('/employee-dashboard')}>
+                <SidebarMenuLink asChild>
+                  <Link to="/employee-dashboard">
+                    <User />
+                    <span>Employee Dashboard</span>
+                  </Link>
+                </SidebarMenuLink>
+              </SidebarMenuItem>
+              
+              {isHR && (
+                <SidebarMenuItem active={isActive('/employees')}>
+                  <SidebarMenuLink asChild>
+                    <Link to="/employees">
+                      <Users />
+                      <span>Employees</span>
+                    </Link>
+                  </SidebarMenuLink>
+                </SidebarMenuItem>
+              )}
+              
+              <SidebarMenuItem active={isActive('/attendance')}>
+                <SidebarMenuLink asChild>
+                  <Link to="/attendance">
+                    <Clock />
+                    <span>Attendance</span>
+                  </Link>
+                </SidebarMenuLink>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem active={isActive('/leave')}>
+                <SidebarMenuLink asChild>
+                  <Link to="/leave">
+                    <Calendar />
+                    <span>Leave Management</span>
+                  </Link>
+                </SidebarMenuLink>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem active={isActive('/payroll')}>
+                <SidebarMenuLink asChild>
+                  <Link to="/payroll">
+                    <DollarSign />
+                    <span>Payroll</span>
+                  </Link>
+                </SidebarMenuLink>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem active={isActive('/performance')}>
+                <SidebarMenuLink asChild>
+                  <Link to="/performance">
+                    <TrendingUp />
+                    <span>Performance</span>
+                  </Link>
+                </SidebarMenuLink>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem active={isActive('/documents')}>
+                <SidebarMenuLink asChild>
+                  <Link to="/documents">
+                    <FileText />
+                    <span>Documents</span>
+                  </Link>
+                </SidebarMenuLink>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Account</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem active={isActive('/settings')}>
+                <SidebarMenuLink asChild>
+                  <Link to="/settings">
+                    <Settings />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuLink>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={logout}>
+                  <LogOut />
+                  <span>Logout</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="border-t p-4">
-        <button 
-          onClick={logout}
-          className="flex w-full items-center gap-3 px-3 py-2 text-gray-700 hover:text-hrms-blue rounded-md transition-colors"
-        >
-          <LogOut size={18} />
-          <span>Logout</span>
-        </button>
+      <SidebarFooter>
+        <div className="px-3 py-2">
+          <div className="flex items-center gap-2 rounded-md p-2">
+            <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+              {user?.name?.charAt(0) || 'U'}
+            </div>
+            <div className="overflow-hidden">
+              <div className="font-medium truncate">{user?.name || 'User'}</div>
+              <div className="text-xs text-muted-foreground truncate">{user?.email || 'user@example.com'}</div>
+            </div>
+          </div>
+        </div>
       </SidebarFooter>
+      
+      <SidebarTrigger className="absolute -right-3 top-10 z-10" />
     </Sidebar>
   );
 };
