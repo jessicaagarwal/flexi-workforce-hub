@@ -17,6 +17,11 @@ import EmployeeDashboard from "./pages/EmployeeDashboard";
 import LeaveManagement from "./pages/LeaveManagement";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
+import Attendance from "./pages/Attendance";
+import Payroll from "./pages/Payroll";
+import Performance from "./pages/Performance";
+import Documents from "./pages/Documents";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -46,12 +51,11 @@ const App = () => (
               <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
               <Route path="/employees" element={<Employees />} />
               <Route path="/leave" element={<LeaveManagement />} />
-              {/* Add other routes here as they are implemented */}
-              <Route path="/payroll" element={<div className="p-6">Payroll page coming soon</div>} />
-              <Route path="/performance" element={<div className="p-6">Performance tracking page coming soon</div>} />
-              <Route path="/documents" element={<div className="p-6">Document management page coming soon</div>} />
-              <Route path="/attendance" element={<div className="p-6">Attendance management page coming soon</div>} />
-              <Route path="/settings" element={<div className="p-6">Settings page coming soon</div>} />
+              <Route path="/attendance" element={<Attendance />} />
+              <Route path="/payroll" element={<Payroll />} />
+              <Route path="/performance" element={<Performance />} />
+              <Route path="/documents" element={<Documents />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
             
             {/* Catch-all route */}
