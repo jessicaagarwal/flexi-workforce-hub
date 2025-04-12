@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bell, User, Search } from 'lucide-react';
+import { Bell, User, Search, Settings, LogOut } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
