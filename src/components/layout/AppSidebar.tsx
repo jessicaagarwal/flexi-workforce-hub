@@ -25,7 +25,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuLink,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
@@ -55,79 +54,103 @@ const AppSidebar: React.FC = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {isHR && (
-                <SidebarMenuItem active={isActive('/dashboard')}>
-                  <SidebarMenuLink asChild>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={isActive('/dashboard')}
+                    asChild
+                  >
                     <Link to="/dashboard">
                       <LayoutDashboard />
                       <span>HR Dashboard</span>
                     </Link>
-                  </SidebarMenuLink>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
               
-              <SidebarMenuItem active={isActive('/employee-dashboard')}>
-                <SidebarMenuLink asChild>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/employee-dashboard')}
+                  asChild
+                >
                   <Link to="/employee-dashboard">
                     <User />
                     <span>Employee Dashboard</span>
                   </Link>
-                </SidebarMenuLink>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               
               {isHR && (
-                <SidebarMenuItem active={isActive('/employees')}>
-                  <SidebarMenuLink asChild>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    isActive={isActive('/employees')}
+                    asChild
+                  >
                     <Link to="/employees">
                       <Users />
                       <span>Employees</span>
                     </Link>
-                  </SidebarMenuLink>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
               
-              <SidebarMenuItem active={isActive('/attendance')}>
-                <SidebarMenuLink asChild>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/attendance')}
+                  asChild
+                >
                   <Link to="/attendance">
                     <Clock />
                     <span>Attendance</span>
                   </Link>
-                </SidebarMenuLink>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               
-              <SidebarMenuItem active={isActive('/leave')}>
-                <SidebarMenuLink asChild>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/leave')}
+                  asChild
+                >
                   <Link to="/leave">
                     <Calendar />
                     <span>Leave Management</span>
                   </Link>
-                </SidebarMenuLink>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               
-              <SidebarMenuItem active={isActive('/payroll')}>
-                <SidebarMenuLink asChild>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/payroll')}
+                  asChild
+                >
                   <Link to="/payroll">
                     <DollarSign />
                     <span>Payroll</span>
                   </Link>
-                </SidebarMenuLink>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               
-              <SidebarMenuItem active={isActive('/performance')}>
-                <SidebarMenuLink asChild>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/performance')}
+                  asChild
+                >
                   <Link to="/performance">
                     <TrendingUp />
                     <span>Performance</span>
                   </Link>
-                </SidebarMenuLink>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               
-              <SidebarMenuItem active={isActive('/documents')}>
-                <SidebarMenuLink asChild>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/documents')}
+                  asChild
+                >
                   <Link to="/documents">
                     <FileText />
                     <span>Documents</span>
                   </Link>
-                </SidebarMenuLink>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -137,13 +160,16 @@ const AppSidebar: React.FC = () => {
           <SidebarGroupLabel>Account</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem active={isActive('/settings')}>
-                <SidebarMenuLink asChild>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/settings')}
+                  asChild
+                >
                   <Link to="/settings">
                     <Settings />
                     <span>Settings</span>
                   </Link>
-                </SidebarMenuLink>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               
               <SidebarMenuItem>
