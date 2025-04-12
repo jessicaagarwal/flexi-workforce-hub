@@ -22,6 +22,7 @@ import Payroll from "./pages/Payroll";
 import Performance from "./pages/Performance";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/performance" element={<Performance />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
             
             {/* Catch-all route */}

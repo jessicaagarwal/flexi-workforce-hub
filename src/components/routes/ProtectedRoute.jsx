@@ -3,7 +3,10 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
+const ProtectedRoute = ({ 
+  children, 
+  allowedRoles 
+}) => {
   const { user, isAuthenticated, isLoading } = useAuth();
   
   // Show loading state
