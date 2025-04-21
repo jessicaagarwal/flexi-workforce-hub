@@ -5,9 +5,9 @@
 
 @layer base {
   :root {
-    /* Updated colors per the provided palette */
-    --background: 0 0% 96%; /* Soft off-white for clean section separation */
-    --foreground: 220 20% 20%; /* Deep slate for readability and balance */
+    --background: 0 0% 96%;
+    --foreground: 220 20% 20%;
+
     --card: 0 0% 100%;
     --card-foreground: 220 20% 20%;
     --popover: 0 0% 100%;
@@ -25,16 +25,16 @@
     --accent: 0 0% 96%;
     --accent-foreground: 220 20% 20%;
 
-    --destructive: 4 90% 58%; /* Bold red */
+    --destructive: 4 90% 58%; /* Alert red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
+    --border: 220 20% 85%; /* light-slate border */
+    --input: 220 20% 85%;
     --ring: 172 100% 34%;
     --radius: 1rem;
 
-    /* Sidebar colors (unchanged, feel free to request changes) */
-    --sidebar-background: 172 100% 16%; /* dark green-cyan for sidebar bg (approximation) */
+    /* Sidebar colors */
+    --sidebar-background: 172 100% 16%; /* deep green-cyan */
     --sidebar-foreground: 0 0% 96%;
     --sidebar-primary: 172 100% 34%;
     --sidebar-primary-foreground: 0 0% 98%;

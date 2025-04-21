@@ -34,6 +34,7 @@ export const SidebarProvider = ({ children }) => {
   );
 };
 
+// Exported as named export for TS/routes compatibility
 export const Sidebar = ({ className, children, ...props }) => {
   const { expanded, isMobile } = useSidebar();
   
