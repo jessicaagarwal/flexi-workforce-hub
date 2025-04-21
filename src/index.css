@@ -5,44 +5,46 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 217 91% 40%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 217 91% 40%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 222.2 84% 4.9%;
+    /* Primary colors */
+    --background: 248 244% 98%; /* Very soft off-white */
+    --foreground: 274 15% 24%; /* Dark muted purple */
+    
+    --card: 262 32% 92%; /* Light lavender background */
+    --card-foreground: 272 20% 20%; /* Darker gray-purple text */
+    
+    --popover: 260 40% 95%; /* Light lavender background slightly lighter */
+    --popover-foreground: 272 24% 18%; /* Dark gray lavender text */
+    
+    --primary: 260 70% 50%; /* Strong purple */
+    --primary-foreground: 0 0% 100%; /* White text */
+    
+    --secondary: 270 40% 90%; /* Very light purple */
+    --secondary-foreground: 270 50% 40%; /* Medium purple */
+    
+    --muted: 270 30% 92%; /* Very pale purple */
+    --muted-foreground: 270 25% 50%; /* Medium muted purple */
+    
+    --accent: 260 70% 58%; /* Slightly lighter purple accent */
+    --accent-foreground: 0 0% 100%; /* White text */
+    
+    --destructive: 348 95% 60%; /* Vibrant red */
+    --destructive-foreground: 0 0% 98%; /* White text */
+    
+    --border: 270 20% 80%; /* Light lavender border */
+    --input: 270 15% 90%; /* Input bg lightly tinted purple */
+    --ring: 260 70% 55%; /* Purple ring focus */
+    
+    --radius: 0.75rem;
+    
+    /* Sidebar colors */
+    --sidebar-background: 265 43% 15%;
+    --sidebar-foreground: 270 15% 80%;
+    --sidebar-primary: 270 60% 70%;
+    --sidebar-primary-foreground: 260 50% 10%;
+    --sidebar-accent: 270 40% 85%;
+    --sidebar-accent-foreground: 260 50% 20%;
+    --sidebar-border: 270 20% 30%;
+    --sidebar-ring: 270 60% 80%;
   }
 
   * {
@@ -50,26 +52,25 @@
   }
 
   body {
-    @apply bg-background text-foreground h-screen;
+    @apply bg-background text-foreground h-screen font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
-  /* Custom scrollbar */
+  /* Custom Scrollbar with purple hues */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
-  
   ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: hsl(270 20% 95%);
   }
-  
   ::-webkit-scrollbar-thumb {
-    background: #c0c0c0;
+    background: hsl(260 70% 50%);
     border-radius: 4px;
   }
-  
   ::-webkit-scrollbar-thumb:hover {
-    background: #a0a0a0;
+    background: hsl(260 80% 60%);
   }
   
   @keyframes pulse {
@@ -92,35 +93,35 @@
   }
   
   .hrms-card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all;
+    @apply bg-card rounded-lg shadow-sm border border-border p-6 transition-colors;
   }
   
   .hrms-card-hover {
-    @apply hrms-card hover:shadow-md hover:border-gray-300 transition-all;
+    @apply hrms-card hover:shadow-md hover:border-secondary transition-colors;
   }
   
   .hrms-input {
-    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-hrms-blue focus:ring-hrms-blue text-sm;
+    @apply block w-full rounded-md border border-input bg-input shadow-sm focus:border-primary focus:ring-primary text-sm;
   }
   
   .hrms-label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium text-secondary-foreground mb-1;
   }
   
   .hrms-btn {
-    @apply inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
+    @apply inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
   }
   
   .hrms-btn-primary {
-    @apply hrms-btn bg-hrms-blue text-white hover:bg-blue-700 focus:ring-blue-500;
+    @apply hrms-btn bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary;
   }
   
   .hrms-btn-secondary {
-    @apply hrms-btn bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-hrms-blue;
+    @apply hrms-btn bg-secondary text-secondary-foreground border-secondary hover:bg-secondary/90 focus:ring-secondary;
   }
   
   .hrms-btn-danger {
-    @apply hrms-btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+    @apply hrms-btn bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:ring-destructive;
   }
   
   .hrms-btn-success {
@@ -128,7 +129,7 @@
   }
   
   .status-badge {
-    @apply text-xs font-medium px-2.5 py-0.5 rounded-full;
+    @apply text-xs font-bold px-2.5 py-0.5 rounded-full;
   }
   
   .status-badge-success {
@@ -144,6 +145,7 @@
   }
   
   .status-badge-info {
-    @apply status-badge bg-blue-100 text-blue-800;
+    @apply status-badge bg-primary/20 text-primary-foreground;
   }
 }
+

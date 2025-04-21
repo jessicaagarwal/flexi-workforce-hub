@@ -64,10 +64,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				hrms: {
-					blue: '#0F52BA',
-					lightblue: '#3B82F6',
-					gray: '#F8F9FA',
-					darkgray: '#4B5563',
+					blue: '#6E59A5', // custom purple-blue midshade
+					lightblue: '#9b87f5', // lighter purple accent
+					gray: '#F1F0FB', // soft light gray background
+					darkgray: '#403E43', // charcoal gray text
 					success: '#10B981',
 					warning: '#F59E0B',
 					danger: '#EF4444',
