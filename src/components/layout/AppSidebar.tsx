@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -26,14 +25,14 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
-} from '@/components/ui/sidebar';
+} from '@/components/ui/sidebar.jsx';
 import { useAuth } from '@/hooks/useAuth';
 
-const AppSidebar: React.FC = () => {
+const AppSidebar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path) => location.pathname === path;
   
   const isHR = user?.role === 'hr' || user?.role === 'admin';
   
