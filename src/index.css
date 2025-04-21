@@ -5,74 +5,71 @@
 
 @layer base {
   :root {
-    /* Primary colors */
-    --background: 248 244% 98%; /* Very soft off-white */
-    --foreground: 274 15% 24%; /* Dark muted purple */
-    
-    --card: 262 32% 92%; /* Light lavender background */
-    --card-foreground: 272 20% 20%; /* Darker gray-purple text */
-    
-    --popover: 260 40% 95%; /* Light lavender background slightly lighter */
-    --popover-foreground: 272 24% 18%; /* Dark gray lavender text */
-    
-    --primary: 260 70% 50%; /* Strong purple */
-    --primary-foreground: 0 0% 100%; /* White text */
-    
-    --secondary: 270 40% 90%; /* Very light purple */
-    --secondary-foreground: 270 50% 40%; /* Medium purple */
-    
-    --muted: 270 30% 92%; /* Very pale purple */
-    --muted-foreground: 270 25% 50%; /* Medium muted purple */
-    
-    --accent: 260 70% 58%; /* Slightly lighter purple accent */
-    --accent-foreground: 0 0% 100%; /* White text */
-    
-    --destructive: 348 95% 60%; /* Vibrant red */
-    --destructive-foreground: 0 0% 98%; /* White text */
-    
-    --border: 270 20% 80%; /* Light lavender border */
-    --input: 270 15% 90%; /* Input bg lightly tinted purple */
-    --ring: 260 70% 55%; /* Purple ring focus */
-    
-    --radius: 0.75rem;
-    
-    /* Sidebar colors */
-    --sidebar-background: 265 43% 15%;
-    --sidebar-foreground: 270 15% 80%;
-    --sidebar-primary: 270 60% 70%;
-    --sidebar-primary-foreground: 260 50% 10%;
-    --sidebar-accent: 270 40% 85%;
-    --sidebar-accent-foreground: 260 50% 20%;
-    --sidebar-border: 270 20% 30%;
-    --sidebar-ring: 270 60% 80%;
+    /* Updated colors per the provided palette */
+    --background: 0 0% 96%; /* Soft off-white for clean section separation */
+    --foreground: 220 20% 20%; /* Deep slate for readability and balance */
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+
+    --primary: 172 100% 34%; /* Rich green-cyan */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 220 20% 20%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 220 20% 20%;
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 220 20% 20%;
+
+    --destructive: 4 90% 58%; /* Bold red */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 172 100% 34%;
+    --radius: 1rem;
+
+    /* Sidebar colors (unchanged, feel free to request changes) */
+    --sidebar-background: 172 100% 16%; /* dark green-cyan for sidebar bg (approximation) */
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 172 100% 34%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 172 100% 28%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 172 100% 26%;
+    --sidebar-ring: 172 100% 34%;
   }
 
   * {
     @apply border-border;
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-background text-foreground h-screen font-sans;
+    @apply bg-background text-foreground antialiased h-screen font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
-  /* Custom Scrollbar with purple hues */
+
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: hsl(270 20% 95%);
+    background: hsl(0 0% 92%);
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(260 70% 50%);
+    background: hsl(172 100% 34%);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(260 80% 60%);
+    background: hsl(172 100% 28%);
   }
-  
+
   @keyframes pulse {
     0%, 100% {
       opacity: 1;
@@ -81,7 +78,6 @@
       opacity: 0.7;
     }
   }
-  
   .animate-pulse-slow {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
@@ -91,61 +87,46 @@
   .hrms-container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
-  
   .hrms-card {
     @apply bg-card rounded-lg shadow-sm border border-border p-6 transition-colors;
   }
-  
   .hrms-card-hover {
     @apply hrms-card hover:shadow-md hover:border-secondary transition-colors;
   }
-  
   .hrms-input {
     @apply block w-full rounded-md border border-input bg-input shadow-sm focus:border-primary focus:ring-primary text-sm;
   }
-  
   .hrms-label {
     @apply block text-sm font-medium text-secondary-foreground mb-1;
   }
-  
   .hrms-btn {
     @apply inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
   }
-  
   .hrms-btn-primary {
     @apply hrms-btn bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary;
   }
-  
   .hrms-btn-secondary {
     @apply hrms-btn bg-secondary text-secondary-foreground border-secondary hover:bg-secondary/90 focus:ring-secondary;
   }
-  
   .hrms-btn-danger {
     @apply hrms-btn bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:ring-destructive;
   }
-  
   .hrms-btn-success {
     @apply hrms-btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
   }
-  
   .status-badge {
     @apply text-xs font-bold px-2.5 py-0.5 rounded-full;
   }
-  
   .status-badge-success {
     @apply status-badge bg-green-100 text-green-800;
   }
-  
   .status-badge-warning {
     @apply status-badge bg-yellow-100 text-yellow-800;
   }
-  
   .status-badge-danger {
     @apply status-badge bg-red-100 text-red-800;
   }
-  
   .status-badge-info {
     @apply status-badge bg-primary/20 text-primary-foreground;
   }
 }
-
