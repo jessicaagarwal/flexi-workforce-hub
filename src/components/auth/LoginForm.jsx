@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -16,6 +15,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { Separator } from '@/components/ui/separator';
+import { useAppDispatch } from '@/redux/hooks';
+import { setCredentials } from '@/redux/authSlice';
+import GoogleIcon from '@/components/icons/GoogleIcon';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -25,6 +28,8 @@ const loginSchema = z.object({
 const LoginForm = () => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  
   const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -37,7 +42,11 @@ const LoginForm = () => {
     try {
       const user = await login(data.email, data.password);
       if (user) {
-        // Navigate based on user role
+        dispatch(setCredentials({ 
+          user, 
+          token: 'mock-jwt-token' 
+        }));
+        
         if (user.role === 'admin' || user.role === 'hr') {
           navigate('/admin/dashboard');
         } else {
@@ -47,6 +56,20 @@ const LoginForm = () => {
     } catch (error) {
       console.error('Login error:', error);
     }
+  };
+
+  const setAdminCredentials = () => {
+    form.setValue('email', 'admin@hrx.com');
+    form.setValue('password', 'admin123');
+  };
+
+  const setEmployeeCredentials = () => {
+    form.setValue('email', 'employee@hrx.com');
+    form.setValue('password', 'employee123');
+  };
+
+  const handleGoogleSignIn = () => {
+    toast.info('Google Sign-In coming soon!');
   };
 
   return (
@@ -106,7 +129,35 @@ const LoginForm = () => {
         </form>
       </Form>
 
-      <div className="mt-6 text-center text-sm">
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <Separator className="w-full" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full flex items-center justify-center gap-2"
+        onClick={handleGoogleSignIn}
+      >
+        <GoogleIcon className="h-5 w-5" />
+        Sign in with Google
+      </Button>
+
+      <div className="mt-6 text-center text-sm flex justify-center gap-4">
+        <Button variant="outline" size="sm" onClick={setAdminCredentials}>
+          Admin Demo
+        </Button>
+        <Button variant="outline" size="sm" onClick={setEmployeeCredentials}>
+          Employee Demo
+        </Button>
+      </div>
+      
+      <div className="mt-4 text-center text-sm">
         <p>
           Don't have an account?{' '}
           <Link 
@@ -116,13 +167,6 @@ const LoginForm = () => {
             Sign up
           </Link>
         </p>
-      </div>
-      
-      <div className="mt-4 text-center text-xs text-gray-500">
-        <p>Demo credentials:</p>
-        <p>Admin: admin@hrms.com / admin123</p>
-        <p>HR: hr@hrms.com / hr123</p>
-        <p>Employee: employee@hrms.com / employee123</p>
       </div>
     </div>
   );

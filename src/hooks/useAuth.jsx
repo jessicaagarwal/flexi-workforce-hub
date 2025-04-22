@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -7,21 +6,21 @@ const MOCK_USERS = [
   {
     id: '1',
     name: 'Admin User',
-    email: 'admin@hrms.com',
+    email: 'admin@hrx.com',
     password: 'admin123',
     role: 'admin',
   },
   {
     id: '2',
     name: 'HR Manager',
-    email: 'hr@hrms.com',
+    email: 'hr@hrx.com',
     password: 'hr123',
     role: 'hr',
   },
   {
     id: '3',
     name: 'John Employee',
-    email: 'employee@hrms.com',
+    email: 'employee@hrx.com',
     password: 'employee123',
     role: 'employee',
   },

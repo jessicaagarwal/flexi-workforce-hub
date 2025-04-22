@@ -61,8 +61,8 @@ const AppSidebar = () => {
     <Sidebar className="border-r border-border h-screen">
       <SidebarHeader className="flex items-center px-4 h-16">
         <div className="flex items-center flex-1">
-          <span className="text-xl font-bold text-[hsl(172,100%,34%)]">HRMS</span>
-          <span className="text-xl font-bold text-gray-700">Pro</span>
+          <span className="text-xl font-bold text-[hsl(172,100%,34%)]">HR</span>
+          <span className="text-xl font-bold text-gray-700">X</span>
         </div>
         <SidebarTrigger>
           <Button variant="ghost" size="icon">
@@ -81,7 +81,7 @@ const AppSidebar = () => {
                 'flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-[hsl(172,70%,95%)] text-[hsl(172,100%,34%)]'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  : 'text-gray-700 hover:bg-gray-100'
               )}
             >
               <link.icon className="mr-2 h-5 w-5" />

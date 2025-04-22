@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -7,7 +6,7 @@ import TopBar from './TopBar';
 import { useAuth } from '@/hooks/useAuth';
 
 const AppLayout = () => {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
