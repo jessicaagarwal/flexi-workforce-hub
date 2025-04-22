@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -54,8 +53,8 @@ export default {
 					foreground: 'hsl(220,20%,20%)'
 				},
 				sidebar: {
-					DEFAULT: 'hsl(172,100%,16%)',
-					foreground: 'hsl(0,0%,96%)',
+					DEFAULT: 'hsl(0,0%,100%)',
+					foreground: 'hsl(220,20%,20%)',
 					primary: 'hsl(172,100%,34%)',
 					'primary-foreground': 'hsl(0,0%,98%)',
 					accent: 'hsl(172,100%,28%)',

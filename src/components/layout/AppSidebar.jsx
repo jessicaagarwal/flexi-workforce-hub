@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
@@ -38,24 +37,24 @@ const AppSidebar = () => {
   // Define navigation links based on user role
   const navLinks = isAdmin 
     ? [
-        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { name: 'Employees', href: '/employees', icon: Users },
-        { name: 'Leave Requests', href: '/leave', icon: Calendar },
-        { name: 'Payroll', href: '/payroll', icon: DollarSign },
-        { name: 'Performance', href: '/performance', icon: Award },
-        { name: 'Attendance', href: '/attendance', icon: Clock },
-        { name: 'Documents', href: '/documents', icon: FileText },
-        { name: 'Settings', href: '/settings', icon: Settings },
+        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: 'Employees', href: '/admin/employees', icon: Users },
+        { name: 'Leave Requests', href: '/admin/leaves', icon: Calendar },
+        { name: 'Payroll', href: '/admin/payroll', icon: DollarSign },
+        { name: 'Performance', href: '/admin/performance', icon: Award },
+        { name: 'Attendance', href: '/admin/attendance', icon: Clock },
+        { name: 'Documents', href: '/admin/documents', icon: FileText },
+        { name: 'Settings', href: '/admin/settings', icon: Settings },
       ]
     : [
-        { name: 'Dashboard', href: '/employee-dashboard', icon: LayoutDashboard },
-        { name: 'My Profile', href: '/profile', icon: User },
-        { name: 'Leave Management', href: '/leave', icon: Calendar },
-        { name: 'Attendance', href: '/attendance', icon: Clock },
-        { name: 'Payroll', href: '/payroll', icon: DollarSign },
-        { name: 'Performance', href: '/performance', icon: Award },
-        { name: 'Documents', href: '/documents', icon: FileText },
-        { name: 'Settings', href: '/settings', icon: Settings },
+        { name: 'Dashboard', href: '/employee/dashboard', icon: LayoutDashboard },
+        { name: 'My Profile', href: '/employee/profile', icon: User },
+        { name: 'Leave Management', href: '/employee/leave', icon: Calendar },
+        { name: 'Attendance', href: '/employee/attendance', icon: Clock },
+        { name: 'Payroll', href: '/employee/payroll', icon: DollarSign },
+        { name: 'Performance', href: '/employee/performance', icon: Award },
+        { name: 'Documents', href: '/employee/documents', icon: FileText },
+        { name: 'Settings', href: '/employee/settings', icon: Settings },
       ];
 
   return (
@@ -82,7 +81,7 @@ const AppSidebar = () => {
                 'flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-[hsl(172,70%,95%)] text-[hsl(172,100%,34%)]'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               )}
             >
               <link.icon className="mr-2 h-5 w-5" />
