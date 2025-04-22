@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -19,7 +18,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { useAppDispatch } from '@/redux/hooks';
 import { setCredentials } from '@/redux/authSlice';
-import { Google } from 'lucide-react';
+import GoogleIcon from '@/components/icons/GoogleIcon';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -44,14 +43,12 @@ const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginFormValues) => {
     try {
       const result = await login(data.email, data.password);
-      // Store user info and token in Redux
       if (result && result.user) {
         dispatch(setCredentials({ 
           user: result.user, 
           token: result.token || 'mock-jwt-token' 
         }));
         
-        // Navigate based on user role
         if (result.user.role === 'admin' || result.user.role === 'hr') {
           navigate('/admin/dashboard');
         } else {
@@ -71,6 +68,10 @@ const LoginForm: React.FC = () => {
   const setEmployeeCredentials = () => {
     form.setValue('email', 'employee@hrx.com');
     form.setValue('password', 'employee123');
+  };
+
+  const handleGoogleSignIn = () => {
+    toast.info('Google Sign-In coming soon!');
   };
 
   return (
@@ -143,9 +144,9 @@ const LoginForm: React.FC = () => {
         type="button"
         variant="outline"
         className="w-full flex items-center justify-center gap-2"
-        disabled
+        onClick={handleGoogleSignIn}
       >
-        <Google className="h-4 w-4" />
+        <GoogleIcon className="h-5 w-5" />
         Sign in with Google
       </Button>
 
