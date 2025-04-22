@@ -1,6 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 // Mock user data for demonstration
@@ -35,7 +34,6 @@ const AuthContext = createContext(undefined);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
   
   useEffect(() => {
     // Check for saved user in localStorage
@@ -70,7 +68,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('hrms_user', JSON.stringify(userWithoutPassword));
       
       toast.success('Login successful!');
-      navigate('/dashboard');
+      return userWithoutPassword; // Return the user object for navigation in the component
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed');
       throw error;
@@ -83,7 +81,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem('hrms_user');
     toast.success('Logged out successfully');
-    navigate('/login');
+    // Navigation will be handled by the component that calls this function
   };
   
   const register = async (name, email, password) => {
@@ -100,7 +98,7 @@ export const AuthProvider = ({ children }) => {
       
       // In a real app, this would send data to the backend
       toast.success('Registration successful! Please login.');
-      navigate('/login');
+      return true; // Return success for navigation in the component
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Registration failed');
       throw error;

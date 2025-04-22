@@ -19,6 +19,11 @@ const TopBar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+  
   return (
     <header className="z-10 bg-white border-b px-4 sm:px-6 py-4 flex items-center justify-between">
       <div className="flex items-center w-full max-w-md">
@@ -63,7 +68,7 @@ const TopBar = () => {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Logout</span>
             </DropdownMenuItem>

@@ -35,7 +35,15 @@ const LoginForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      await login(data.email, data.password);
+      const user = await login(data.email, data.password);
+      if (user) {
+        // Navigate based on user role
+        if (user.role === 'admin' || user.role === 'hr') {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/employee/dashboard');
+        }
+      }
     } catch (error) {
       console.error('Login error:', error);
     }

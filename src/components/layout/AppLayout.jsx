@@ -1,11 +1,22 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar.jsx';
 import AppSidebar from './AppSidebar';
 import TopBar from './TopBar';
+import { useAuth } from '@/hooks/useAuth';
 
 const AppLayout = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
+  // Redirect to login if not authenticated
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-gray-50">
