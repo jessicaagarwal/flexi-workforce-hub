@@ -24,11 +24,18 @@ import {
   SidebarHeader,
   SidebarTrigger
 } from '@/components/ui/sidebar';
+import { useNavigate } from 'react-router-dom';
 
 const AppSidebar: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdmin = user?.role === 'admin' || user?.role === 'hr';
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   
   // Define navigation links based on user role
   const navLinks = isAdmin 
@@ -70,7 +77,6 @@ const AppSidebar: React.FC = () => {
       <SidebarContent className="px-3 py-4">
         <nav className="space-y-1">
           {navLinks.map((link) => {
-            const isActive = location.pathname === link.href;
             return (
               <NavLink
                 key={link.href}
@@ -107,7 +113,7 @@ const AppSidebar: React.FC = () => {
           <Button 
             variant="outline" 
             className="w-full justify-start text-red-500"
-            onClick={logout}
+            onClick={handleLogout}
           >
             <LogOut className="mr-2 h-4 w-4" />
             Logout

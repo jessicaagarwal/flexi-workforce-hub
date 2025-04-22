@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   useEffect(() => {
     // Check for saved user in localStorage for backward compatibility
-    const savedUser = localStorage.getItem('hrms_user');
+    const savedUser = localStorage.getItem('hrx_user');
     if (savedUser && !isAuthenticated) {
       const parsedUser = JSON.parse(savedUser);
       dispatch(setCredentials({ 
@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { password: _, ...userWithoutPassword } = foundUser;
       
       // Save to localStorage for backward compatibility
-      localStorage.setItem('hrms_user', JSON.stringify(userWithoutPassword));
+      localStorage.setItem('hrx_user', JSON.stringify(userWithoutPassword));
       
       toast.success('Login successful!');
       
@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const logout = () => {
     dispatch(clearCredentials());
-    localStorage.removeItem('hrms_user');
+    localStorage.removeItem('hrx_user');
     toast.success('Logged out successfully');
   };
   

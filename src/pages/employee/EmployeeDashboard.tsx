@@ -5,9 +5,11 @@ import { Clock, Calendar, Award, DollarSign, FileText } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const EmployeeDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [clockedIn, setClockedIn] = React.useState(false);
   
   // Mock attendance data
@@ -15,6 +17,14 @@ const EmployeeDashboard: React.FC = () => {
   
   const handleClockInOut = () => {
     setClockedIn(!clockedIn);
+  };
+  
+  const navigateToLeave = () => {
+    navigate('/employee/leave');
+  };
+  
+  const navigateToPayroll = () => {
+    navigate('/employee/payroll');
   };
   
   return (
@@ -43,12 +53,12 @@ const EmployeeDashboard: React.FC = () => {
               {clockedIn ? 'Clock Out' : 'Clock In'}
             </Button>
             
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={navigateToLeave}>
               <Calendar className="mr-2 h-4 w-4" />
               Apply for Leave
             </Button>
             
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={navigateToPayroll}>
               <FileText className="mr-2 h-4 w-4" />
               Latest Payslip
             </Button>
