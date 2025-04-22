@@ -1,283 +1,119 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import {
+import { NavLink, useLocation } from 'react-router-dom';
+import { 
+  User, 
+  FileText, 
+  Calendar, 
+  DollarSign, 
+  Award, 
+  Clock, 
+  Settings, 
+  Users, 
   LayoutDashboard,
-  Users,
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  FileText,
-  Clock,
-  Settings,
   LogOut,
-  User,
-  Briefcase
+  Menu
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarTrigger,
+  SidebarTrigger
 } from '@/components/ui/sidebar';
-import { useAuth } from '@/hooks/useAuth';
 
-// Helper: active detection
-const isActivePath = (location, path) => location.pathname === path;
-
-const AppSidebar = () => {
-  const location = useLocation();
+const AppSidebar: React.FC = () => {
   const { user, logout } = useAuth();
-
-  const isHR = user?.role === 'hr' || user?.role === 'admin';
+  const location = useLocation();
+  const isAdmin = user?.role === 'admin' || user?.role === 'hr';
+  
+  // Define navigation links based on user role
+  const navLinks = isAdmin 
+    ? [
+        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: 'Employees', href: '/admin/employees', icon: Users },
+        { name: 'Leave Requests', href: '/admin/leaves', icon: Calendar },
+        { name: 'Payroll', href: '/admin/payroll', icon: DollarSign },
+        { name: 'Performance', href: '/admin/performance', icon: Award },
+        { name: 'Attendance', href: '/admin/attendance', icon: Clock },
+        { name: 'Documents', href: '/admin/documents', icon: FileText },
+        { name: 'Settings', href: '/admin/settings', icon: Settings },
+      ]
+    : [
+        { name: 'Dashboard', href: '/employee/dashboard', icon: LayoutDashboard },
+        { name: 'My Profile', href: '/employee/profile', icon: User },
+        { name: 'Leave Management', href: '/employee/leave', icon: Calendar },
+        { name: 'Attendance', href: '/employee/attendance', icon: Clock },
+        { name: 'Payroll', href: '/employee/payroll', icon: DollarSign },
+        { name: 'Performance', href: '/employee/performance', icon: Award },
+        { name: 'Documents', href: '/employee/documents', icon: FileText },
+        { name: 'Settings', href: '/employee/settings', icon: Settings },
+      ];
 
   return (
-    <Sidebar
-      className={cn(
-        "!bg-white text-gray-600 shadow-lg border-r border-gray-200 min-h-screen w-64 flex flex-col",
-        "transition-all duration-300"
-      )}
-    >
-      <SidebarHeader className="px-6 py-5 border-b border-gray-200 flex items-center gap-4">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="rounded-md bg-primary p-2 flex items-center justify-center shadow-md">
-            <Briefcase className="h-5 w-5 text-white" />
-          </div>
-          <span className="font-bold text-xl text-gray-800 tracking-tight">
-            {isHR ? "MasterHR" : "EmployeeHR"}
-          </span>
-        </Link>
+    <Sidebar className="border-r border-border h-screen">
+      <SidebarHeader className="flex items-center px-4 h-16">
+        <div className="flex items-center flex-1">
+          <span className="text-xl font-bold text-[hsl(172,100%,34%)]">HRMS</span>
+          <span className="text-xl font-bold text-gray-700">Pro</span>
+        </div>
+        <SidebarTrigger>
+          <Button variant="ghost" size="icon">
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SidebarTrigger>
       </SidebarHeader>
-
-      <SidebarContent className="flex-1 flex flex-col gap-4 py-4 px-3">
-        <div className="px-3 mb-1 text-xs font-semibold text-gray-500 uppercase">
-          {isHR ? "Admin" : "Dashboards"}
-        </div>
-        
-        <SidebarGroup>
-          <SidebarGroupContent className="py-1 px-1 flex flex-col gap-1">
-            <SidebarMenu className="flex flex-col gap-1">
-              {isHR && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={isActivePath(location, '/dashboard')}
-                    asChild
-                    className={cn(
-                      isActivePath(location, '/dashboard')
-                        ? "bg-primary bg-opacity-10 text-primary font-medium"
-                        : "text-gray-700 hover:bg-gray-100",
-                      "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
-                    )}
-                  >
-                    <Link to="/dashboard">
-                      <LayoutDashboard className="w-5 h-5" />
-                      <span>Admin Dashboard</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={isActivePath(location, '/employee-dashboard')}
-                  asChild
-                  className={cn(
-                    isActivePath(location, '/employee-dashboard')
-                      ? "bg-primary bg-opacity-10 text-primary font-medium"
-                      : "text-gray-700 hover:bg-gray-100",
-                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
-                  )}
-                >
-                  <Link to="/employee-dashboard">
-                    <User className="w-5 h-5" />
-                    <span>My Dashboard</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <div className="px-3 mt-3 mb-1 text-xs font-semibold text-gray-500 uppercase">
-          HR Management
-        </div>
-        
-        <SidebarGroup>
-          <SidebarGroupContent className="py-1 px-1 flex flex-col gap-1">
-            <SidebarMenu className="flex flex-col gap-1">
-              {isHR && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={isActivePath(location, '/employees')}
-                    asChild
-                    className={cn(
-                      isActivePath(location, '/employees')
-                        ? "bg-primary bg-opacity-10 text-primary font-medium"
-                        : "text-gray-700 hover:bg-gray-100",
-                      "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
-                    )}
-                  >
-                    <Link to="/employees">
-                      <Users className="w-5 h-5" />
-                      <span>Employees</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={isActivePath(location, '/attendance')}
-                  asChild
-                  className={cn(
-                    isActivePath(location, '/attendance')
-                      ? "bg-primary bg-opacity-10 text-primary font-medium"
-                      : "text-gray-700 hover:bg-gray-100",
-                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
-                  )}
-                >
-                  <Link to="/attendance">
-                    <Clock className="w-5 h-5" />
-                    <span>Attendance</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={isActivePath(location, '/leave')}
-                  asChild
-                  className={cn(
-                    isActivePath(location, '/leave')
-                      ? "bg-primary bg-opacity-10 text-primary font-medium"
-                      : "text-gray-700 hover:bg-gray-100",
-                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
-                  )}
-                >
-                  <Link to="/leave">
-                    <Calendar className="w-5 h-5" />
-                    <span>Leave Management</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={isActivePath(location, '/payroll')}
-                  asChild
-                  className={cn(
-                    isActivePath(location, '/payroll')
-                      ? "bg-primary bg-opacity-10 text-primary font-medium"
-                      : "text-gray-700 hover:bg-gray-100",
-                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
-                  )}
-                >
-                  <Link to="/payroll">
-                    <DollarSign className="w-5 h-5" />
-                    <span>Payroll</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={isActivePath(location, '/performance')}
-                  asChild
-                  className={cn(
-                    isActivePath(location, '/performance')
-                      ? "bg-primary bg-opacity-10 text-primary font-medium"
-                      : "text-gray-700 hover:bg-gray-100",
-                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
-                  )}
-                >
-                  <Link to="/performance">
-                    <TrendingUp className="w-5 h-5" />
-                    <span>Performance</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={isActivePath(location, '/documents')}
-                  asChild
-                  className={cn(
-                    isActivePath(location, '/documents')
-                      ? "bg-primary bg-opacity-10 text-primary font-medium"
-                      : "text-gray-700 hover:bg-gray-100",
-                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
-                  )}
-                >
-                  <Link to="/documents">
-                    <FileText className="w-5 h-5" />
-                    <span>Documents</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <div className="px-3 mt-3 mb-1 text-xs font-semibold text-gray-500 uppercase">
-          Tools
-        </div>
-        
-        <SidebarGroup>
-          <SidebarGroupContent className="py-1 px-1 flex flex-col gap-1">
-            <SidebarMenu className="flex flex-col gap-1">
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={isActivePath(location, '/settings')}
-                  asChild
-                  className={cn(
-                    isActivePath(location, '/settings')
-                      ? "bg-primary bg-opacity-10 text-primary font-medium"
-                      : "text-gray-700 hover:bg-gray-100",
-                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
-                  )}
-                >
-                  <Link to="/settings">
-                    <Settings className="w-5 h-5" />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      
+      <SidebarContent className="px-3 py-4">
+        <nav className="space-y-1">
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.href;
+            return (
+              <NavLink
+                key={link.href}
+                to={link.href}
+                className={({ isActive }) => cn(
+                  'flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-[hsl(172,70%,95%)] text-[hsl(172,100%,34%)]'
+                    : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <link.icon className="mr-2 h-5 w-5" />
+                {link.name}
+              </NavLink>
+            );
+          })}
+        </nav>
       </SidebarContent>
-
-      <SidebarFooter className="px-0 py-4 flex items-center justify-center border-t border-gray-200">
-        <div className="flex items-center gap-3 w-full px-4">
-          <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center text-primary font-semibold text-sm">
-            {user?.name?.charAt(0) || 'U'}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="font-medium text-gray-800 truncate text-sm">
-              {user?.name || 'User'}
+      
+      <SidebarFooter className="px-3 py-4 mt-auto">
+        <div className="space-y-4">
+          <div className="px-3">
+            <div className="flex items-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+              </div>
             </div>
-            <div className="text-xs text-gray-500 truncate">
-              {user?.role === 'admin' ? 'Administrator' : user?.role === 'hr' ? 'HR Manager' : 'Employee'}
-            </div>
           </div>
-          <button 
+          
+          <Button 
+            variant="outline" 
+            className="w-full justify-start text-red-500"
             onClick={logout}
-            className="text-gray-500 hover:text-warning rounded p-1"
           >
-            <LogOut className="w-5 h-5" />
-          </button>
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
         </div>
       </SidebarFooter>
-
-      <SidebarTrigger className="absolute -right-3 top-16 z-10 !bg-white !text-gray-700 border border-gray-200 shadow-md" />
     </Sidebar>
   );
 };

@@ -2,9 +2,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { setCredentials, clearCredentials, setLoading } from '@/redux/authSlice';
 
 // Types
-type User = {
+export type User = {
   id: string;
   name: string;
   email: string;
@@ -16,7 +18,7 @@ type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ user: User; token: string } | void>;
   logout: () => void;
   register: (name: string, email: string, password: string) => Promise<void>;
 };
@@ -51,21 +53,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { user, isAuthenticated, isLoading } = useAppSelector(state => state.auth);
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Check for saved user in localStorage
+    // Check for saved user in localStorage for backward compatibility
     const savedUser = localStorage.getItem('hrms_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    if (savedUser && !isAuthenticated) {
+      const parsedUser = JSON.parse(savedUser);
+      dispatch(setCredentials({ 
+        user: parsedUser, 
+        token: 'mock-jwt-token' 
+      }));
+    } else {
+      dispatch(setLoading(false));
     }
-    setIsLoading(false);
-  }, []);
+  }, [dispatch, isAuthenticated]);
   
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
+    dispatch(setLoading(true));
     
     try {
       // Simulate API request delay
@@ -83,29 +90,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Create user object (without password)
       const { password: _, ...userWithoutPassword } = foundUser;
       
-      // Save to state and localStorage
-      setUser(userWithoutPassword);
+      // Save to localStorage for backward compatibility
       localStorage.setItem('hrms_user', JSON.stringify(userWithoutPassword));
       
       toast.success('Login successful!');
-      navigate('/dashboard');
+      
+      return {
+        user: userWithoutPassword,
+        token: 'mock-jwt-token-' + foundUser.id,
+      };
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed');
       throw error;
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
   
   const logout = () => {
-    setUser(null);
+    dispatch(clearCredentials());
     localStorage.removeItem('hrms_user');
     toast.success('Logged out successfully');
     navigate('/login');
   };
   
   const register = async (name: string, email: string, password: string) => {
-    setIsLoading(true);
+    dispatch(setLoading(true));
     
     try {
       // Simulate API request delay
@@ -123,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error(error instanceof Error ? error.message : 'Registration failed');
       throw error;
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
   
@@ -131,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        isAuthenticated,
         isLoading,
         login,
         logout,
@@ -151,6 +161,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-// Types export
-export type { User };
