@@ -11,7 +11,8 @@ import {
   Clock,
   Settings,
   LogOut,
-  User
+  User,
+  Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -41,27 +42,28 @@ const AppSidebar = () => {
   return (
     <Sidebar
       className={cn(
-        "!bg-[hsl(172,100%,16%)] text-sidebar-foreground rounded-tr-2xl rounded-br-2xl shadow-xl border-r-0 min-h-screen w-64 flex flex-col",
+        "!bg-white text-gray-600 shadow-lg border-r border-gray-200 min-h-screen w-64 flex flex-col",
         "transition-all duration-300"
       )}
     >
-      <SidebarHeader className="px-6 py-6 border-b border-[hsl(172,100%,26%)] flex items-center gap-4 bg-[hsl(172,100%,28%)] rounded-tr-2xl">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="rounded-full bg-[hsl(172,100%,34%)] p-2 flex items-center justify-center shadow-lg">
-            <Users className="h-8 w-8 text-[hsl(0,0%,98%)]" />
+      <SidebarHeader className="px-6 py-5 border-b border-gray-200 flex items-center gap-4">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="rounded-md bg-primary p-2 flex items-center justify-center shadow-md">
+            <Briefcase className="h-5 w-5 text-white" />
           </div>
-          <span className="font-extrabold text-2xl text-[hsl(0,0%,96%)] tracking-wide drop-shadow-sm">
-            HRMS Pro
+          <span className="font-bold text-xl text-gray-800 tracking-tight">
+            {isHR ? "MasterHR" : "EmployeeHR"}
           </span>
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="flex-1 flex flex-col gap-5 py-6 px-3">
+      <SidebarContent className="flex-1 flex flex-col gap-4 py-4 px-3">
+        <div className="px-3 mb-1 text-xs font-semibold text-gray-500 uppercase">
+          {isHR ? "Admin" : "Dashboards"}
+        </div>
+        
         <SidebarGroup>
-          <SidebarGroupLabel className="!text-[hsl(0,0%,96%)] !font-bold px-3 mb-2 tracking-wide uppercase text-xs">
-            Main Menu
-          </SidebarGroupLabel>
-          <SidebarGroupContent className="bg-[hsl(172,100%,20%)] rounded-xl py-2 px-1 flex flex-col gap-[2px] shadow">
+          <SidebarGroupContent className="py-1 px-1 flex flex-col gap-1">
             <SidebarMenu className="flex flex-col gap-1">
               {isHR && (
                 <SidebarMenuItem>
@@ -70,14 +72,14 @@ const AppSidebar = () => {
                     asChild
                     className={cn(
                       isActivePath(location, '/dashboard')
-                        ? "bg-[hsl(172,100%,34%)] text-[hsl(0,0%,98%)] font-bold ring-2 ring-[hsl(172,100%,34%)] shadow-md"
-                        : "text-[hsl(0,0%,96%)] hover:bg-[hsl(172,100%,28%)] hover:text-[hsl(0,0%,98%)]",
-                      "flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base"
+                        ? "bg-primary bg-opacity-10 text-primary font-medium"
+                        : "text-gray-700 hover:bg-gray-100",
+                      "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
                     )}
                   >
                     <Link to="/dashboard">
-                      <LayoutDashboard className="w-6 h-6" />
-                      <span>HR Dashboard</span>
+                      <LayoutDashboard className="w-5 h-5" />
+                      <span>Admin Dashboard</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -89,18 +91,28 @@ const AppSidebar = () => {
                   asChild
                   className={cn(
                     isActivePath(location, '/employee-dashboard')
-                      ? "bg-[hsl(172,100%,34%)] text-[hsl(0,0%,98%)] font-bold ring-2 ring-[hsl(172,100%,34%)] shadow-md"
-                      : "text-[hsl(0,0%,96%)] hover:bg-[hsl(172,100%,28%)] hover:text-[hsl(0,0%,98%)]",
-                    "flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base"
+                      ? "bg-primary bg-opacity-10 text-primary font-medium"
+                      : "text-gray-700 hover:bg-gray-100",
+                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
                   )}
                 >
                   <Link to="/employee-dashboard">
-                    <User className="w-6 h-6" />
-                    <span>Employee Dashboard</span>
+                    <User className="w-5 h-5" />
+                    <span>My Dashboard</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
+        <div className="px-3 mt-3 mb-1 text-xs font-semibold text-gray-500 uppercase">
+          HR Management
+        </div>
+        
+        <SidebarGroup>
+          <SidebarGroupContent className="py-1 px-1 flex flex-col gap-1">
+            <SidebarMenu className="flex flex-col gap-1">
               {isHR && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
@@ -108,13 +120,13 @@ const AppSidebar = () => {
                     asChild
                     className={cn(
                       isActivePath(location, '/employees')
-                        ? "bg-[hsl(172,100%,34%)] text-[hsl(0,0%,98%)] font-bold ring-2 ring-[hsl(172,100%,34%)] shadow-md"
-                        : "text-[hsl(0,0%,96%)] hover:bg-[hsl(172,100%,28%)] hover:text-[hsl(0,0%,98%)]",
-                      "flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base"
+                        ? "bg-primary bg-opacity-10 text-primary font-medium"
+                        : "text-gray-700 hover:bg-gray-100",
+                      "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
                     )}
                   >
                     <Link to="/employees">
-                      <Users className="w-6 h-6" />
+                      <Users className="w-5 h-5" />
                       <span>Employees</span>
                     </Link>
                   </SidebarMenuButton>
@@ -127,13 +139,13 @@ const AppSidebar = () => {
                   asChild
                   className={cn(
                     isActivePath(location, '/attendance')
-                      ? "bg-[hsl(172,100%,34%)] text-[hsl(0,0%,98%)] font-bold ring-2 ring-[hsl(172,100%,34%)] shadow-md"
-                      : "text-[hsl(0,0%,96%)] hover:bg-[hsl(172,100%,28%)] hover:text-[hsl(0,0%,98%)]",
-                    "flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base"
+                      ? "bg-primary bg-opacity-10 text-primary font-medium"
+                      : "text-gray-700 hover:bg-gray-100",
+                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
                   )}
                 >
                   <Link to="/attendance">
-                    <Clock className="w-6 h-6" />
+                    <Clock className="w-5 h-5" />
                     <span>Attendance</span>
                   </Link>
                 </SidebarMenuButton>
@@ -145,13 +157,13 @@ const AppSidebar = () => {
                   asChild
                   className={cn(
                     isActivePath(location, '/leave')
-                      ? "bg-[hsl(172,100%,34%)] text-[hsl(0,0%,98%)] font-bold ring-2 ring-[hsl(172,100%,34%)] shadow-md"
-                      : "text-[hsl(0,0%,96%)] hover:bg-[hsl(172,100%,28%)] hover:text-[hsl(0,0%,98%)]",
-                    "flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base"
+                      ? "bg-primary bg-opacity-10 text-primary font-medium"
+                      : "text-gray-700 hover:bg-gray-100",
+                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
                   )}
                 >
                   <Link to="/leave">
-                    <Calendar className="w-6 h-6" />
+                    <Calendar className="w-5 h-5" />
                     <span>Leave Management</span>
                   </Link>
                 </SidebarMenuButton>
@@ -163,13 +175,13 @@ const AppSidebar = () => {
                   asChild
                   className={cn(
                     isActivePath(location, '/payroll')
-                      ? "bg-[hsl(172,100%,34%)] text-[hsl(0,0%,98%)] font-bold ring-2 ring-[hsl(172,100%,34%)] shadow-md"
-                      : "text-[hsl(0,0%,96%)] hover:bg-[hsl(172,100%,28%)] hover:text-[hsl(0,0%,98%)]",
-                    "flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base"
+                      ? "bg-primary bg-opacity-10 text-primary font-medium"
+                      : "text-gray-700 hover:bg-gray-100",
+                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
                   )}
                 >
                   <Link to="/payroll">
-                    <DollarSign className="w-6 h-6" />
+                    <DollarSign className="w-5 h-5" />
                     <span>Payroll</span>
                   </Link>
                 </SidebarMenuButton>
@@ -181,13 +193,13 @@ const AppSidebar = () => {
                   asChild
                   className={cn(
                     isActivePath(location, '/performance')
-                      ? "bg-[hsl(172,100%,34%)] text-[hsl(0,0%,98%)] font-bold ring-2 ring-[hsl(172,100%,34%)] shadow-md"
-                      : "text-[hsl(0,0%,96%)] hover:bg-[hsl(172,100%,28%)] hover:text-[hsl(0,0%,98%)]",
-                    "flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base"
+                      ? "bg-primary bg-opacity-10 text-primary font-medium"
+                      : "text-gray-700 hover:bg-gray-100",
+                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
                   )}
                 >
                   <Link to="/performance">
-                    <TrendingUp className="w-6 h-6" />
+                    <TrendingUp className="w-5 h-5" />
                     <span>Performance</span>
                   </Link>
                 </SidebarMenuButton>
@@ -199,13 +211,13 @@ const AppSidebar = () => {
                   asChild
                   className={cn(
                     isActivePath(location, '/documents')
-                      ? "bg-[hsl(172,100%,34%)] text-[hsl(0,0%,98%)] font-bold ring-2 ring-[hsl(172,100%,34%)] shadow-md"
-                      : "text-[hsl(0,0%,96%)] hover:bg-[hsl(172,100%,28%)] hover:text-[hsl(0,0%,98%)]",
-                    "flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base"
+                      ? "bg-primary bg-opacity-10 text-primary font-medium"
+                      : "text-gray-700 hover:bg-gray-100",
+                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
                   )}
                 >
                   <Link to="/documents">
-                    <FileText className="w-6 h-6" />
+                    <FileText className="w-5 h-5" />
                     <span>Documents</span>
                   </Link>
                 </SidebarMenuButton>
@@ -214,11 +226,12 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-4 pt-4 border-t border-[hsl(172,100%,26%)]">
-          <SidebarGroupLabel className="!text-[hsl(0,0%,96%)] !font-bold px-3 mb-2 tracking-wide uppercase text-xs">
-            Account
-          </SidebarGroupLabel>
-          <SidebarGroupContent className="bg-[hsl(172,100%,22%)] rounded-xl py-2 px-1 flex flex-col gap-[2px] shadow">
+        <div className="px-3 mt-3 mb-1 text-xs font-semibold text-gray-500 uppercase">
+          Tools
+        </div>
+        
+        <SidebarGroup>
+          <SidebarGroupContent className="py-1 px-1 flex flex-col gap-1">
             <SidebarMenu className="flex flex-col gap-1">
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -226,25 +239,15 @@ const AppSidebar = () => {
                   asChild
                   className={cn(
                     isActivePath(location, '/settings')
-                      ? "bg-[hsl(172,100%,34%)] text-[hsl(0,0%,98%)] font-bold ring-2 ring-[hsl(172,100%,34%)] shadow-md"
-                      : "text-[hsl(0,0%,96%)] hover:bg-[hsl(172,100%,28%)] hover:text-[hsl(0,0%,98%)]",
-                    "flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base"
+                      ? "bg-primary bg-opacity-10 text-primary font-medium"
+                      : "text-gray-700 hover:bg-gray-100",
+                    "flex items-center gap-3 rounded-md px-3 py-2 transition-all text-sm"
                   )}
                 >
                   <Link to="/settings">
-                    <Settings className="w-6 h-6" />
+                    <Settings className="w-5 h-5" />
                     <span>Settings</span>
                   </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={logout}
-                  className="text-[hsl(0,0%,96%)] hover:bg-[hsl(4,90%,58%)] hover:text-[hsl(0,0%,98%)] flex items-center gap-4 rounded-lg px-5 py-3 transition-all text-base font-semibold"
-                >
-                  <LogOut className="w-6 h-6" />
-                  <span>Logout</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -252,23 +255,29 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="bg-[hsl(172,100%,28%)] rounded-br-2xl px-0 py-5 flex items-center justify-center border-t border-[hsl(172,100%,26%)]">
-        <div className="flex items-center gap-4 w-full px-6">
-          <div className="h-12 w-12 rounded-full bg-[hsl(0,0%,92%)] flex items-center justify-center text-[hsl(172,100%,28%)] font-bold text-xl shadow">
+      <SidebarFooter className="px-0 py-4 flex items-center justify-center border-t border-gray-200">
+        <div className="flex items-center gap-3 w-full px-4">
+          <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center text-primary font-semibold text-sm">
             {user?.name?.charAt(0) || 'U'}
           </div>
-          <div className="min-w-0">
-            <div className="font-bold text-[hsl(0,0%,96%)] truncate text-base">
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-gray-800 truncate text-sm">
               {user?.name || 'User'}
             </div>
-            <div className="text-xs text-[hsl(172,100%,16%)] truncate">
-              {user?.email || 'user@example.com'}
+            <div className="text-xs text-gray-500 truncate">
+              {user?.role === 'admin' ? 'Administrator' : user?.role === 'hr' ? 'HR Manager' : 'Employee'}
             </div>
           </div>
+          <button 
+            onClick={logout}
+            className="text-gray-500 hover:text-warning rounded p-1"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </SidebarFooter>
 
-      <SidebarTrigger className="absolute -right-4 top-16 z-10 !bg-white !text-[hsl(172,100%,34%)] border border-[hsl(172,100%,34%)] shadow-xl" />
+      <SidebarTrigger className="absolute -right-3 top-16 z-10 !bg-white !text-gray-700 border border-gray-200 shadow-md" />
     </Sidebar>
   );
 };

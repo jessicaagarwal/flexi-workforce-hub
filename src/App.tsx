@@ -22,6 +22,7 @@ import Payroll from "./pages/Payroll";
 import Performance from "./pages/Performance";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -38,18 +39,35 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
-            {/* Redirect root to dashboard if authenticated */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Redirect root to appropriate dashboard based on role */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                {({ user }) => 
+                  user?.role === 'hr' || user?.role === 'admin' ? 
+                    <Navigate to="/dashboard" replace /> : 
+                    <Navigate to="/employee-dashboard" replace />
+                }
+              </ProtectedRoute>
+            } />
             
-            {/* Protected routes with AppLayout */}
+            {/* Admin/HR Protected Routes */}
+            <Route element={
+              <ProtectedRoute allowedRoles={['admin', 'hr']}>
+                <AppLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/employees" element={<Employees />} />
+            </Route>
+            
+            {/* Employee Protected Routes */}
             <Route element={
               <ProtectedRoute>
                 <AppLayout />
               </ProtectedRoute>
             }>
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
-              <Route path="/employees" element={<Employees />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/leave" element={<LeaveManagement />} />
               <Route path="/attendance" element={<Attendance />} />
               <Route path="/payroll" element={<Payroll />} />

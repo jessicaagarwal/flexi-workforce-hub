@@ -1,11 +1,19 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from './AppSidebar';
 import TopBar from './TopBar';
+import { useAuth } from '@/hooks/useAuth';
 
 const AppLayout: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
+  
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-gray-50">
