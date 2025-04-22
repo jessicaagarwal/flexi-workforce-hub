@@ -62,10 +62,20 @@ const LoginForm: React.FC = () => {
     }
   };
 
+  const setAdminCredentials = () => {
+    form.setValue('email', 'admin@hrx.com');
+    form.setValue('password', 'admin123');
+  };
+
+  const setEmployeeCredentials = () => {
+    form.setValue('email', 'employee@hrx.com');
+    form.setValue('password', 'employee123');
+  };
+
   return (
     <div className="mx-auto w-full max-w-md p-6 bg-white rounded-lg shadow-md">
       <div className="flex flex-col space-y-2 text-center mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Welcome to HRMS Pro</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Welcome to HRX</h1>
         <p className="text-sm text-muted-foreground">
           Enter your credentials to sign in to your account
         </p>
@@ -155,7 +165,16 @@ const LoginForm: React.FC = () => {
         Sign in with Google (Coming soon)
       </Button>
 
-      <div className="mt-6 text-center text-sm">
+      <div className="mt-6 text-center text-sm flex justify-center gap-4">
+        <Button variant="outline" size="sm" onClick={setAdminCredentials}>
+          Admin Demo
+        </Button>
+        <Button variant="outline" size="sm" onClick={setEmployeeCredentials}>
+          Employee Demo
+        </Button>
+      </div>
+      
+      <div className="mt-4 text-center text-sm">
         <p>
           Don't have an account?{' '}
           <Link 
@@ -165,13 +184,6 @@ const LoginForm: React.FC = () => {
             Sign up
           </Link>
         </p>
-      </div>
-      
-      <div className="mt-4 text-center text-xs text-gray-500">
-        <p>Demo credentials:</p>
-        <p>Admin: admin@hrms.com / admin123</p>
-        <p>HR: hr@hrms.com / hr123</p>
-        <p>Employee: employee@hrms.com / employee123</p>
       </div>
     </div>
   );

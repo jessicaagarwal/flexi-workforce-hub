@@ -57,8 +57,8 @@ const AppSidebar: React.FC = () => {
     <Sidebar className="border-r border-border h-screen">
       <SidebarHeader className="flex items-center px-4 h-16">
         <div className="flex items-center flex-1">
-          <span className="text-xl font-bold text-[hsl(172,100%,34%)]">HRMS</span>
-          <span className="text-xl font-bold text-gray-700">Pro</span>
+          <span className="text-xl font-bold text-[hsl(172,100%,34%)]">HR</span>
+          <span className="text-xl font-bold text-gray-700">X</span>
         </div>
         <SidebarTrigger>
           <Button variant="ghost" size="icon">

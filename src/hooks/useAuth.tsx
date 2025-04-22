@@ -1,6 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { setCredentials, clearCredentials, setLoading } from '@/redux/authSlice';
@@ -28,21 +27,21 @@ const MOCK_USERS = [
   {
     id: '1',
     name: 'Admin User',
-    email: 'admin@hrms.com',
+    email: 'admin@hrx.com',
     password: 'admin123',
     role: 'admin' as const,
   },
   {
     id: '2',
     name: 'HR Manager',
-    email: 'hr@hrms.com',
+    email: 'hr@hrx.com',
     password: 'hr123',
     role: 'hr' as const,
   },
   {
     id: '3',
     name: 'John Employee',
-    email: 'employee@hrms.com',
+    email: 'employee@hrx.com',
     password: 'employee123',
     role: 'employee' as const,
   },
@@ -55,7 +54,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useAppDispatch();
   const { user, isAuthenticated, isLoading } = useAppSelector(state => state.auth);
-  const navigate = useNavigate();
   
   useEffect(() => {
     // Check for saved user in localStorage for backward compatibility
@@ -111,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch(clearCredentials());
     localStorage.removeItem('hrms_user');
     toast.success('Logged out successfully');
-    navigate('/login');
   };
   
   const register = async (name: string, email: string, password: string) => {
@@ -128,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // In a real app, this would send data to the backend
       toast.success('Registration successful! Please login.');
-      navigate('/login');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Registration failed');
       throw error;

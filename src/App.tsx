@@ -86,16 +86,6 @@ const App = () => (
                   <Route path="settings" element={<Settings />} />
                 </Route>
                 
-                {/* Legacy routes for backward compatibility */}
-                <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="/employee-dashboard" element={<Navigate to="/employee/dashboard" replace />} />
-                <Route path="/profile" element={<Navigate to="/employee/profile" replace />} />
-                <Route path="/leave" element={<Navigate to="/employee/leave" replace />} />
-                <Route path="/attendance" element={<Navigate to="/employee/attendance" replace />} />
-                <Route path="/payroll" element={<Navigate to="/employee/payroll" replace />} />
-                <Route path="/performance" element={<Navigate to="/employee/performance" replace />} />
-                <Route path="/documents" element={<Navigate to="/employee/documents" replace />} />
-                
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
