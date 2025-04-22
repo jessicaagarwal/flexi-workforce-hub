@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
-import { SidebarProvider } from '@/components/ui/sidebar.jsx';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from './AppSidebar';
 import TopBar from './TopBar';
 import { useAuth } from '@/hooks/useAuth';

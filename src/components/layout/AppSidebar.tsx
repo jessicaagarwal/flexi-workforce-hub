@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   User, 
   FileText, 
@@ -24,11 +24,9 @@ import {
   SidebarHeader,
   SidebarTrigger
 } from '@/components/ui/sidebar';
-import { useNavigate } from 'react-router-dom';
 
 const AppSidebar: React.FC = () => {
   const { user, logout } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = user?.role === 'admin' || user?.role === 'hr';
   
@@ -76,23 +74,21 @@ const AppSidebar: React.FC = () => {
       
       <SidebarContent className="px-3 py-4">
         <nav className="space-y-1">
-          {navLinks.map((link) => {
-            return (
-              <NavLink
-                key={link.href}
-                to={link.href}
-                className={({ isActive }) => cn(
-                  'flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-[hsl(172,70%,95%)] text-[hsl(172,100%,34%)]'
-                    : 'text-gray-700 hover:bg-gray-100'
-                )}
-              >
-                <link.icon className="mr-2 h-5 w-5" />
-                {link.name}
-              </NavLink>
-            );
-          })}
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.href}
+              to={link.href}
+              className={({ isActive }) => cn(
+                'flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-[hsl(172,70%,95%)] text-[hsl(172,100%,34%)]'
+                  : 'text-gray-700 hover:bg-gray-100'
+              )}
+            >
+              <link.icon className="mr-2 h-5 w-5" />
+              {link.name}
+            </NavLink>
+          ))}
         </nav>
       </SidebarContent>
       
