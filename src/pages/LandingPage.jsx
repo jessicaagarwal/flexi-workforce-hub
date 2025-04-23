@@ -1,6 +1,19 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CheckIcon, UserIcon, UsersIcon, CalendarDaysIcon, DollarSignIcon, StarIcon, LogInIcon, ArrowRightIcon, ClockIcon } from 'lucide-react';
+import { 
+  Check as CheckIcon, 
+  User as UserIcon, 
+  Users as UsersIcon, 
+  Calendar as CalendarDaysIcon, 
+  DollarSign as DollarSignIcon, 
+  Star as StarIcon, 
+  LogIn as LogInIcon, 
+  ArrowRight as ArrowRightIcon, 
+  Clock as ClockIcon,
+  Linkedin as LinkedinIcon,
+  FileText
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -361,9 +374,7 @@ const LandingPage = () => {
   );
 };
 
-// Helper Components
-import { Clock as ClockIcon, Calendar as CalendarDaysIcon, User as UserIcon, Users as UsersIcon, Linkedin as LinkedinIcon, DollarSign, Star as StarIcon, LogIn as LogInIcon, ArrowRight as ArrowRightIcon, Check as CheckIcon, FileText } from 'lucide-react';
-
+// Helper Components (without redundant imports)
 const FeatureCard = ({ icon, title, description }) => (
   <Card className="h-full hover:shadow-md transition-shadow duration-300">
     <CardContent className="p-6 flex flex-col items-center text-center">
