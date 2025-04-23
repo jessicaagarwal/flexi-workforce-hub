@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CheckIcon, UserIcon, UsersIcon, CalendarDaysIcon, DollarSignIcon, StarIcon, LogInIcon, ArrowRightIcon } from 'lucide-react';
+import { CheckIcon, UserIcon, UsersIcon, CalendarDaysIcon, DollarSignIcon, StarIcon, LogInIcon, ArrowRightIcon, ClockIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -9,7 +8,7 @@ const LandingPage = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-white to-secondary py-20 px-4 sm:px-6 lg:px-8">
+      <section id="hero" className="relative bg-gradient-to-br from-white to-secondary py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center">
             <div className="lg:w-1/2 mb-12 lg:mb-0">
@@ -46,7 +45,7 @@ const LandingPage = () => {
       </section>
 
       {/* Key Features Section */}
-      <section className="py-20 px-4 bg-white sm:px-6 lg:px-8">
+      <section id="features" className="py-20 px-4 bg-white sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Key Features</h2>
@@ -55,7 +54,7 @@ const LandingPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
             <FeatureCard 
               icon={<UsersIcon size={40} className="text-primary" />}
               title="Employee Management"
@@ -65,6 +64,11 @@ const LandingPage = () => {
               icon={<CalendarDaysIcon size={40} className="text-primary" />}
               title="Leave Tracking"
               description="Manage leave applications, approvals, and balances seamlessly."
+            />
+            <FeatureCard 
+              icon={<ClockIcon size={40} className="text-primary" />}
+              title="Attendance Tracking"
+              description="Seamlessly manage clock-in/out, mark absences, & monitor staff attendance."
             />
             <FeatureCard 
               icon={<DollarSignIcon size={40} className="text-primary" />}
@@ -81,7 +85,7 @@ const LandingPage = () => {
       </section>
 
       {/* Role-Based Access Section */}
-      <section className="py-20 px-4 bg-gray-50 sm:px-6 lg:px-8">
+      <section id="roles" className="py-20 px-4 bg-gray-50 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Role-Based Access</h2>
@@ -100,6 +104,7 @@ const LandingPage = () => {
                 <ul className="space-y-4">
                   <AccessItem text="Add, edit, and delete users" />
                   <AccessItem text="Approve or reject leave requests" />
+                  <AccessItem text="Track and monitor employee attendance" />
                   <AccessItem text="Generate and manage payroll" />
                   <AccessItem text="Conduct performance reviews" />
                   <AccessItem text="Set company policies" />
@@ -113,7 +118,6 @@ const LandingPage = () => {
                 </div>
               </div>
             </div>
-
             <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <div className="p-8">
                 <div className="flex items-center mb-6">
@@ -122,6 +126,7 @@ const LandingPage = () => {
                 </div>
                 <ul className="space-y-4">
                   <AccessItem text="View and update personal profile" />
+                  <AccessItem text="Clock in/out and view attendance record" />
                   <AccessItem text="Apply for leave and check balances" />
                   <AccessItem text="View payslips and tax documents" />
                   <AccessItem text="Track performance and goals" />
@@ -141,7 +146,7 @@ const LandingPage = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 px-4 bg-white sm:px-6 lg:px-8">
+      <section id="howitworks" className="py-20 px-4 bg-white sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">How It Works</h2>
@@ -180,7 +185,7 @@ const LandingPage = () => {
       </section>
 
       {/* Why Choose HRX */}
-      <section className="py-20 px-4 bg-gray-50 sm:px-6 lg:px-8">
+      <section id="whyhrx" className="py-20 px-4 bg-gray-50 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Why Choose HRX</h2>
@@ -242,7 +247,7 @@ const LandingPage = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 px-4 bg-white sm:px-6 lg:px-8">
+      <section id="testimonials" className="py-20 px-4 bg-white sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">What Our Clients Say</h2>
@@ -307,22 +312,48 @@ const LandingPage = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
                 <ul className="space-y-2">
-                  <li><Link to="/login" className="text-gray-400 hover:text-white transition-colors">Login</Link></li>
-                  <li><a href="#features" className="text-gray-400 hover:text-white transition-colors">Features</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+                  <li>
+                    <a href="#hero" className="text-gray-400 hover:text-white transition-colors">Home</a>
+                  </li>
+                  <li>
+                    <a href="#features" className="text-gray-400 hover:text-white transition-colors">Features</a>
+                  </li>
+                  <li>
+                    <a href="#roles" className="text-gray-400 hover:text-white transition-colors">Access</a>
+                  </li>
+                  <li>
+                    <a href="#howitworks" className="text-gray-400 hover:text-white transition-colors">How it works</a>
+                  </li>
+                  <li>
+                    <a href="#testimonials" className="text-gray-400 hover:text-white transition-colors">Testimonials</a>
+                  </li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-4">Legal</h3>
+                <h3 className="text-lg font-semibold mb-4">Connect</h3>
                 <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                  <li>
+                    <a 
+                      href="https://www.linkedin.com/in/jessica-agarwal/"
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+                    >
+                      <LinkedinIcon className="w-4 h-4" />
+                      LinkedIn
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} HRX. All rights reserved.</p>
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 flex flex-col gap-2">
+            <span>
+              &copy; {new Date().getFullYear()} HRX. All rights reserved.
+            </span>
+            <span>
+              Made with <span className="text-red-400">❤️</span> by Jessica Agarwal
+            </span>
           </div>
         </div>
       </footer>
@@ -331,6 +362,8 @@ const LandingPage = () => {
 };
 
 // Helper Components
+import { Clock as ClockIcon, Calendar as CalendarDaysIcon, User as UserIcon, Users as UsersIcon, Linkedin as LinkedinIcon, DollarSign, Star as StarIcon, LogIn as LogInIcon, ArrowRight as ArrowRightIcon, Check as CheckIcon, FileText } from 'lucide-react';
+
 const FeatureCard = ({ icon, title, description }) => (
   <Card className="h-full hover:shadow-md transition-shadow duration-300">
     <CardContent className="p-6 flex flex-col items-center text-center">
