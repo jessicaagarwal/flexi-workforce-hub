@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +14,7 @@ import EmployeeRoute from "@/components/routes/EmployeeRoute";
 import AppLayout from "@/components/layout/AppLayout";
 
 // Pages
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/admin/Dashboard";
@@ -46,12 +48,13 @@ const App = () => (
             <AuthProvider>
               <Routes>
                 {/* Public routes */}
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 
                 {/* Root redirect based on role */}
-                <Route path="/" element={
+                <Route path="/dashboard" element={
                   <ProtectedRoute>
                     {({ user }) => 
                       user?.role === 'hr' || user?.role === 'admin' ? 
