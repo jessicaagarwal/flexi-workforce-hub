@@ -1,21 +1,22 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Check as CheckIcon, 
-  User as UserIcon, 
-  Users as UsersIcon, 
-  Calendar as CalendarDaysIcon, 
-  DollarSign as DollarSignIcon, 
-  Star as StarIcon, 
-  LogIn as LogInIcon, 
-  ArrowRight as ArrowRightIcon, 
+import {
+  Check as CheckIcon,
+  User as UserIcon,
+  Users as UsersIcon,
+  Calendar as CalendarDaysIcon,
+  DollarSign as DollarSignIcon,
+  Star as StarIcon,
+  LogIn as LogInIcon,
+  ArrowRight as ArrowRightIcon,
   Clock as ClockIcon,
-  Linkedin as LinkedinIcon,
-  FileText
+  Linkedin as LinkedinIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import FeatureCard from '@/components/landing/FeatureCard';
+import AccessItem from '@/components/landing/AccessItem';
+import WorkStep from '@/components/landing/WorkStep';
+import TestimonialCard from '@/components/landing/TestimonialCard';
 
 const LandingPage = () => {
   return (
@@ -373,63 +374,5 @@ const LandingPage = () => {
     </div>
   );
 };
-
-// Helper Components (without redundant imports)
-const FeatureCard = ({ icon, title, description }) => (
-  <Card className="h-full hover:shadow-md transition-shadow duration-300">
-    <CardContent className="p-6 flex flex-col items-center text-center">
-      <div className="mb-4">
-        {icon}
-      </div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
-    </CardContent>
-  </Card>
-);
-
-const AccessItem = ({ text }) => (
-  <li className="flex items-center">
-    <CheckIcon className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-    <span className="text-gray-700">{text}</span>
-  </li>
-);
-
-const WorkStep = ({ number, icon, title, description }) => (
-  <div className="flex flex-col items-center text-center max-w-xs">
-    <div className="relative">
-      <div className="bg-primary h-16 w-16 rounded-full flex items-center justify-center mb-4">
-        {icon}
-      </div>
-      <div className="absolute -top-3 -right-3 bg-white h-8 w-8 rounded-full shadow flex items-center justify-center text-sm font-bold text-primary border border-primary">
-        {number}
-      </div>
-    </div>
-    <h3 className="text-xl font-semibold mb-2">{title}</h3>
-    <p className="text-gray-600">{description}</p>
-  </div>
-);
-
-const TestimonialCard = ({ quote, name, role }) => (
-  <Card className="h-full hover:shadow-md transition-shadow duration-300">
-    <CardContent className="p-6">
-      <div className="text-primary mb-4">
-        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M10 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5"></path>
-          <path d="M19 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5"></path>
-        </svg>
-      </div>
-      <p className="text-gray-700 mb-6 italic">{quote}</p>
-      <div className="flex items-center">
-        <div className="h-10 w-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-semibold mr-3">
-          {name.charAt(0)}
-        </div>
-        <div>
-          <p className="font-semibold text-gray-900">{name}</p>
-          <p className="text-sm text-gray-600">{role}</p>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
 
 export default LandingPage;
