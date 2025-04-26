@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { useAppDispatch } from '@/redux/hooks';
 import { setCredentials } from '@/redux/authSlice';
-import GoogleIcon from '@/components/icons/GoogleIcon';
+import GoogleIcon from '@/components/common/GoogleIcon';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
