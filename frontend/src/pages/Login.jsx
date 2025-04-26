@@ -1,19 +1,49 @@
+
 import React from 'react';
-import LoginForm from '@/components/auth/LoginForm';
+import { useForm } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/hooks/useAuth';
 
 const Login = () => {
+  const { login } = useAuth();
+  const { register, handleSubmit } = useForm();
+
+  const onSubmit = (data) => {
+    login(data);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gray-50">
-      <div className="w-full max-w-md mb-6 text-center">
-        <div className="flex justify-center items-center mb-2">
-          <span className="text-3xl font-bold text-[hsl(172,100%,34%)]">HR</span>
-          <span className="text-3xl font-bold text-gray-700">X</span>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md space-y-8 p-8 bg-white rounded-xl shadow-lg">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold">Welcome to HRX</h2>
+          <p className="mt-2 text-gray-600">Sign in to your account</p>
         </div>
-        <p className="text-gray-600">Human Resource Management System</p>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-2">
+            <Input
+              {...register('email')}
+              type="email"
+              placeholder="Email"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Input
+              {...register('password')}
+              type="password"
+              placeholder="Password"
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full">
+            Sign in
+          </Button>
+        </form>
       </div>
-      <LoginForm />
     </div>
   );
 };
 
-export default Login; 
+export default Login;
