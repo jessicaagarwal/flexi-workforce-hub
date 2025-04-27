@@ -12,7 +12,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 20%;
 
-    --primary: 172 100% 34%; /* Rich green-cyan */
+    --primary: 172 100% 34%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 0 0% 96%;
@@ -24,23 +24,13 @@
     --accent: 0 0% 96%;
     --accent-foreground: 220 20% 20%;
 
-    --destructive: 4 90% 58%; /* Alert red */
+    --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 85%; /* light-slate border */
+    --border: 220 20% 85%;
     --input: 220 20% 85%;
     --ring: 172 100% 34%;
     --radius: 1rem;
-
-    /* Sidebar colors */
-    --sidebar-background: 0 0% 100%; /* white */
-    --sidebar-foreground: 220 20% 20%;
-    --sidebar-primary: 172 100% 34%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 172 100% 28%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 172 100% 26%;
-    --sidebar-ring: 172 100% 34%;
   }
 
   .dark {
@@ -52,7 +42,7 @@
     --popover: 220 20% 13%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 172 100% 34%; /* Keep the same primary color */
+    --primary: 172 100% 34%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 220 20% 16%;
@@ -64,7 +54,7 @@
     --accent: 220 20% 16%;
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 4 90% 58%; /* Keep the same destructive color */
+    --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 220 20% 20%;
@@ -72,7 +62,7 @@
     --ring: 172 100% 34%;
 
     /* Sidebar colors for dark mode */
-    --sidebar-background: 220 20% 8%; /* darker than background */
+    --sidebar-background: 220 20% 8%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 172 100% 34%;
     --sidebar-primary-foreground: 0 0% 98%;
@@ -88,7 +78,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased h-screen font-sans;
+    @apply bg-background text-foreground antialiased h-screen font-sans transition-colors duration-300;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -97,27 +87,13 @@
     width: 8px;
     height: 8px;
   }
+
   ::-webkit-scrollbar-track {
-    background: hsl(0 0% 92%);
-  }
-  ::-webkit-scrollbar-thumb {
-    background: hsl(172 100% 34%);
-    border-radius: 4px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: hsl(172 100% 28%);
+    @apply bg-muted dark:bg-muted/20;
   }
 
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.7;
-    }
-  }
-  .animate-pulse-slow {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary rounded-full hover:bg-primary/90;
   }
 }
 

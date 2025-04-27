@@ -20,7 +20,6 @@ const SettingsPage = () => {
   const fileInputRef = useRef(null);
   const [avatarFile, setAvatarFile] = useState(null);
   
-  // Loading states
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingSecurity, setIsSavingSecurity] = useState(false);
@@ -28,10 +27,8 @@ const SettingsPage = () => {
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   
-  // Error state
   const [error, setError] = useState(null);
   
-  // Profile state
   const [profile, setProfile] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -41,13 +38,11 @@ const SettingsPage = () => {
     joinDate: '',
   });
   
-  // Security state
   const [security, setSecurity] = useState({
     twoFactorEnabled: false,
     loginNotifications: false,
   });
   
-  // Notification preferences state
   const [notificationPrefs, setNotificationPrefs] = useState({
     leaveRequests: false,
     performanceReviews: false,
@@ -57,7 +52,6 @@ const SettingsPage = () => {
     attendanceReminders: false,
   });
   
-  // App preferences state
   const [appPrefs, setAppPrefs] = useState({
     darkMode: false,
     systemLanguage: false,
@@ -65,14 +59,12 @@ const SettingsPage = () => {
     reducedMotion: false,
   });
   
-  // Password change state
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
   
-  // Sync theme with appPrefs.darkMode
   useEffect(() => {
     if (appPrefs.darkMode) {
       setTheme('dark');
@@ -81,7 +73,6 @@ const SettingsPage = () => {
     }
   }, [appPrefs.darkMode, setTheme]);
   
-  // Fetch settings data
   useEffect(() => {
     const fetchSettings = async () => {
       if (!user?._id) return;
@@ -89,7 +80,6 @@ const SettingsPage = () => {
       try {
         setIsLoading(true);
         
-        // Fetch profile data
         const profileResponse = await api.get(`/settings/${user._id}/profile`);
         setProfile({
           name: profileResponse.data.name || user?.name || '',
@@ -100,14 +90,12 @@ const SettingsPage = () => {
           joinDate: profileResponse.data.joinDate || '',
         });
         
-        // Fetch security settings
         const securityResponse = await api.get(`/settings/${user._id}/security`);
         setSecurity({
           twoFactorEnabled: securityResponse.data.twoFactorEnabled || false,
           loginNotifications: securityResponse.data.loginNotifications || false,
         });
         
-        // Fetch notification preferences
         const notificationResponse = await api.get(`/settings/${user._id}/notifications`);
         setNotificationPrefs({
           leaveRequests: notificationResponse.data.leaveRequests || false,
@@ -118,7 +106,6 @@ const SettingsPage = () => {
           attendanceReminders: notificationResponse.data.attendanceReminders || false,
         });
         
-        // Fetch app preferences
         const preferencesResponse = await api.get(`/settings/${user._id}/preferences`);
         setAppPrefs({
           darkMode: preferencesResponse.data.darkMode || false,
@@ -140,48 +127,40 @@ const SettingsPage = () => {
     fetchSettings();
   }, [user]);
   
-  // Handle profile input change
   const handleProfileChange = (e) => {
     const { id, value } = e.target;
     setProfile(prev => ({ ...prev, [id]: value }));
   };
   
-  // Handle password input change
   const handlePasswordChange = (e) => {
     const { id, value } = e.target;
-    const fieldName = id.replace('-', ''); // Convert 'current-password' to 'currentPassword'
+    const fieldName = id.replace('-', '');
     setPasswordData(prev => ({ ...prev, [fieldName]: value }));
   };
   
-  // Handle security toggle change
   const handleSecurityToggle = (key) => {
     setSecurity(prev => ({ ...prev, [key]: !prev[key] }));
   };
   
-  // Handle notification toggle change
   const handleNotificationToggle = (key) => {
     setNotificationPrefs(prev => ({ ...prev, [key]: !prev[key] }));
   };
   
-  // Handle app preferences toggle change
   const handlePrefToggle = (key) => {
     const newValue = !appPrefs[key];
     setAppPrefs(prev => ({ ...prev, [key]: newValue }));
     
-    // Directly update theme when darkMode is toggled
     if (key === 'darkMode') {
       setTheme(newValue ? 'dark' : 'light');
     }
   };
   
-  // Handle avatar change
   const handleAvatarChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setAvatarFile(e.target.files[0]);
     }
   };
   
-  // Handle avatar upload
   const handleAvatarUpload = async () => {
     if (!avatarFile) {
       toast.error('Please select an image to upload');
@@ -202,9 +181,6 @@ const SettingsPage = () => {
       
       toast.success('Avatar updated successfully');
       setAvatarFile(null);
-      
-      // Refresh user data (this would typically be handled by your auth context)
-      // For now, we'll just show a success message
     } catch (err) {
       console.error('Error uploading avatar:', err);
       toast.error('Failed to upload avatar');
@@ -213,7 +189,6 @@ const SettingsPage = () => {
     }
   };
   
-  // Save profile changes
   const handleSaveProfile = async () => {
     try {
       setIsSavingProfile(true);
@@ -229,9 +204,7 @@ const SettingsPage = () => {
     }
   };
   
-  // Update password
   const handleUpdatePassword = async () => {
-    // Validate passwords
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('New passwords do not match');
       return;
@@ -252,7 +225,6 @@ const SettingsPage = () => {
       
       toast.success('Password updated successfully');
       
-      // Clear password fields
       setPasswordData({
         currentPassword: '',
         newPassword: '',
@@ -266,7 +238,6 @@ const SettingsPage = () => {
     }
   };
   
-  // Save security settings
   const handleSaveSecurity = async () => {
     try {
       setIsSavingSecurity(true);
@@ -282,7 +253,6 @@ const SettingsPage = () => {
     }
   };
   
-  // Save notification preferences
   const handleSaveNotifications = async () => {
     try {
       setIsSavingNotifications(true);
@@ -298,7 +268,6 @@ const SettingsPage = () => {
     }
   };
   
-  // Save app preferences
   const handleSavePreferences = async () => {
     try {
       setIsSavingPreferences(true);
@@ -338,7 +307,7 @@ const SettingsPage = () => {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 transition-colors duration-300">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
           Account Settings
@@ -705,14 +674,22 @@ const SettingsPage = () => {
                 <h3 className="text-lg font-medium">Theme</h3>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <div>Dark mode</div>
+                    <div className="flex items-center space-x-2">
+                      {theme === 'dark' ? (
+                        <Moon className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <Sun className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span>Dark mode</span>
+                    </div>
                     <div className="text-sm text-muted-foreground">
                       Switch between light and dark theme
                     </div>
                   </div>
                   <Switch 
-                    checked={appPrefs.darkMode}
-                    onCheckedChange={() => handlePrefToggle('darkMode')}
+                    checked={theme === 'dark'}
+                    onCheckedChange={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                    className="transition-opacity"
                   />
                 </div>
               </div>
@@ -784,4 +761,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage; 
+export default SettingsPage;
