@@ -1,5 +1,26 @@
 const Leave = require('../models/Leave');
 
+// Get leave balance
+exports.getLeaveBalance = async (req, res) => {
+  try {
+    // In a real app, this would query a leave balance table or calculate from leave records
+    // For now, we'll return a simple mock response
+    res.json({
+      annual: 20,
+      sick: 10,
+      personal: 5,
+      annualUsed: 0,
+      sickUsed: 0,
+      personalUsed: 0,
+      annualTotal: 20,
+      sickTotal: 10,
+      personalTotal: 5
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Apply for leave
 exports.applyLeave = async (req, res) => {
   try {
@@ -30,6 +51,16 @@ exports.getAllLeaves = async (req, res) => {
 exports.getMyLeaves = async (req, res) => {
   try {
     const leaves = await Leave.find({ requestedBy: req.user._id });
+    res.json(leaves);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get employee leave history
+exports.getEmployeeLeaves = async (req, res) => {
+  try {
+    const leaves = await Leave.find({ employee: req.params.id });
     res.json(leaves);
   } catch (error) {
     res.status(500).json({ message: error.message });

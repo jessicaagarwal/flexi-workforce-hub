@@ -8,6 +8,11 @@ const documentSchema = new mongoose.Schema({
   },
   title: { type: String, required: true },
   fileUrl: { type: String, required: true },
+  category: { 
+    type: String, 
+    enum: ['personal', 'payroll', 'company'],
+    default: 'personal'
+  },
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

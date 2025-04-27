@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Employee = require('../models/Employee');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
@@ -12,7 +13,15 @@ exports.register = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
 
+    // Create user
     const user = await User.create({ name, email, password, role });
+
+    // Create employee record for the user
+    await Employee.create({
+      name: user.name,
+      email: user.email,
+      createdBy: user._id
+    });
 
     res.status(201).json({
       _id: user._id,

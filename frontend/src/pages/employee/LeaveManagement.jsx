@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import api from '@/services/apiService';
 import {
   Form,
   FormControl,
@@ -20,8 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { Calendar as CalendarIcon, Plus, Loader2 } from "lucide-react";
+import { format, differenceInDays, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
@@ -59,31 +61,145 @@ const leaveFormSchema = z.object({
   }),
 });
 
-// Mock leave history data
-const leaveHistory = [
-  { id: 1, type: 'Annual Leave', startDate: '2025-03-01', endDate: '2025-03-05', status: 'Approved', days: 5 },
-  { id: 2, type: 'Sick Leave', startDate: '2025-02-10', endDate: '2025-02-11', status: 'Approved', days: 2 },
-  { id: 3, type: 'Personal Leave', startDate: '2025-04-20', endDate: '2025-04-22', status: 'Pending', days: 3 },
-];
-
-// Mock leave balance data
-const leaveBalance = [
-  { type: 'Annual Leave', used: 5, total: 20, remaining: 15 },
-  { type: 'Sick Leave', used: 2, total: 10, remaining: 8 },
-  { type: 'Personal Leave', used: 3, total: 5, remaining: 2 },
-];
-
 const LeaveManagement = () => {
+  const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // State for leave balance
+  const [leaveBalance, setLeaveBalance] = useState([]);
+  const [balanceLoading, setBalanceLoading] = useState(true);
+  const [balanceError, setBalanceError] = useState(null);
+  
+  // State for leave history
+  const [leaveHistory, setLeaveHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState(null);
 
   const form = useForm({
     resolver: zodResolver(leaveFormSchema),
   });
+  
+  // Fetch leave balance
+  useEffect(() => {
+    const fetchLeaveBalance = async () => {
+      if (!user?._id) return;
+      
+      try {
+        setBalanceLoading(true);
+        const response = await api.get(`/leaves/balance/${user._id}`);
+        
+        // Transform the data for display
+        const balanceData = [
+          { 
+            type: 'Annual Leave', 
+            used: response.data.annualUsed || 0, 
+            total: response.data.annualTotal || 20, 
+            remaining: response.data.annual || 0 
+          },
+          { 
+            type: 'Sick Leave', 
+            used: response.data.sickUsed || 0, 
+            total: response.data.sickTotal || 10, 
+            remaining: response.data.sick || 0 
+          },
+          { 
+            type: 'Personal Leave', 
+            used: response.data.personalUsed || 0, 
+            total: response.data.personalTotal || 5, 
+            remaining: response.data.personal || 0 
+          }
+        ];
+        
+        setLeaveBalance(balanceData);
+        setBalanceError(null);
+      } catch (error) {
+        console.error('Error fetching leave balance:', error);
+        setBalanceError('Failed to fetch leave balance');
+      } finally {
+        setBalanceLoading(false);
+      }
+    };
+    
+    fetchLeaveBalance();
+  }, [user]);
+  
+  // Fetch leave history
+  useEffect(() => {
+    const fetchLeaveHistory = async () => {
+      if (!user?._id) return;
+      
+      try {
+        setHistoryLoading(true);
+        const response = await api.get(`/leaves/employee/${user._id}`);
+        
+        // Transform the data for display
+        const historyData = response.data.map(leave => {
+          const startDate = new Date(leave.startDate);
+          const endDate = new Date(leave.endDate);
+          const days = differenceInDays(endDate, startDate) + 1;
+          
+          return {
+            id: leave._id,
+            type: leave.leaveType,
+            startDate: format(startDate, 'yyyy-MM-dd'),
+            endDate: format(endDate, 'yyyy-MM-dd'),
+            status: leave.status,
+            days
+          };
+        });
+        
+        setLeaveHistory(historyData);
+        setHistoryError(null);
+      } catch (error) {
+        console.error('Error fetching leave history:', error);
+        setHistoryError('Failed to fetch leave history');
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+    
+    fetchLeaveHistory();
+  }, [user]);
 
-  const onSubmit = (data) => {
-    toast.success("Leave application submitted successfully!");
-    setShowForm(false);
-    form.reset();
+  const onSubmit = async (data) => {
+    if (!user?._id) {
+      toast.error('User information not available');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Calculate number of days
+      const days = differenceInDays(data.endDate, data.startDate) + 1;
+      
+      // Prepare leave data
+      const leaveData = {
+        employee: user._id,  // Changed from employeeId to employee to match backend model
+        leaveType: data.leaveType,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        reason: data.reason,
+        days
+      };
+      
+      // Submit leave application
+      await api.post('/leaves', leaveData);
+      
+      toast.success("Leave application submitted successfully!");
+      setShowForm(false);
+      form.reset();
+      
+      // Refresh leave history and balance
+      fetchLeaveHistory();
+      fetchLeaveBalance();
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to submit leave application';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -98,6 +214,7 @@ const LeaveManagement = () => {
         <Button 
           onClick={() => setShowForm(!showForm)}
           className={showForm ? "bg-gray-500" : ""}
+          disabled={isSubmitting}
         >
           {showForm ? "Cancel" : <>
             <Plus className="mr-2 h-4 w-4" />
@@ -247,7 +364,20 @@ const LeaveManagement = () => {
                   )}
                 />
 
-                <Button type="submit" className="w-full">Submit Application</Button>
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Application"
+                  )}
+                </Button>
               </form>
             </Form>
           </CardContent>
@@ -261,26 +391,38 @@ const LeaveManagement = () => {
             <CardDescription>Your current leave entitlements</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Used</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Remaining</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leaveBalance.map((leave) => (
-                  <TableRow key={leave.type}>
-                    <TableCell>{leave.type}</TableCell>
-                    <TableCell>{leave.used}</TableCell>
-                    <TableCell>{leave.total}</TableCell>
-                    <TableCell>{leave.remaining}</TableCell>
+            {balanceLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : balanceError ? (
+              <div className="text-center p-8 text-red-500">{balanceError}</div>
+            ) : leaveBalance.length === 0 ? (
+              <div className="text-center p-8 text-muted-foreground">
+                No leave balance data available
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Used</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Remaining</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {leaveBalance.map((leave) => (
+                    <TableRow key={leave.type}>
+                      <TableCell>{leave.type}</TableCell>
+                      <TableCell>{leave.used}</TableCell>
+                      <TableCell>{leave.total}</TableCell>
+                      <TableCell>{leave.remaining}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
@@ -290,36 +432,48 @@ const LeaveManagement = () => {
             <CardDescription>Your recent leave applications</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Days</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leaveHistory.map((leave) => (
-                  <TableRow key={leave.id}>
-                    <TableCell>{leave.type}</TableCell>
-                    <TableCell>{leave.startDate}</TableCell>
-                    <TableCell>{leave.endDate}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        leave.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                        leave.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {leave.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>{leave.days}</TableCell>
+            {historyLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : historyError ? (
+              <div className="text-center p-8 text-red-500">{historyError}</div>
+            ) : leaveHistory.length === 0 ? (
+              <div className="text-center p-8 text-muted-foreground">
+                No leave history available
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>End Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Days</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {leaveHistory.map((leave) => (
+                    <TableRow key={leave.id}>
+                      <TableCell>{leave.type}</TableCell>
+                      <TableCell>{leave.startDate}</TableCell>
+                      <TableCell>{leave.endDate}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          leave.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                          leave.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {leave.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>{leave.days}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

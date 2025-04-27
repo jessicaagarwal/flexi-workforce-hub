@@ -1,5 +1,16 @@
 const Employee = require('../models/Employee');
 
+// Get employee by user ID
+exports.getEmployeeByUserId = async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ createdBy: req.params.userId });
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    res.json(employee);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Add new employee
 exports.addEmployee = async (req, res) => {
   try {

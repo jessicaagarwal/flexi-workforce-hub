@@ -348,7 +348,7 @@ const LandingPage = () => {
                 <ul className="space-y-2">
                   <li>
                     <a 
-                      href="https://www.linkedin.com/in/jessica-agarwal/"
+                      href="https://www.linkedin.com/in/jessica-agarwal-00b6b7225/"
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-gray-400 hover:text-white flex items-center gap-1 transition-colors"

@@ -6,24 +6,50 @@ const payrollSchema = new mongoose.Schema({
     ref: 'Employee',
     required: true
   },
-  salaryMonth: {
-    type: String, // Format: "YYYY-MM"
+  payPeriodEnd: {
+    type: Date,
     required: true
   },
-  baseSalary: { type: Number, required: true },
-  deductions: {
-    tax: { type: Number, default: 0 },
-    pf: { type: Number, default: 0 },
-    other: { type: Number, default: 0 }
+  paymentDate: {
+    type: Date,
+    required: true
   },
-  netSalary: { type: Number },
+  basicSalary: { 
+    type: Number, 
+    required: true 
+  },
+  allowances: { 
+    type: Number, 
+    default: 0 
+  },
+  bonus: { 
+    type: Number, 
+    default: 0 
+  },
+  overtime: { 
+    type: Number, 
+    default: 0 
+  },
+  tax: { 
+    type: Number, 
+    default: 0 
+  },
+  insurance: { 
+    type: Number, 
+    default: 0 
+  },
+  netPay: { 
+    type: Number,
+    required: true
+  },
   status: {
     type: String,
-    enum: ['Generated', 'Paid'],
-    default: 'Generated'
+    enum: ['Pending', 'Processing', 'Paid'],
+    default: 'Pending'
   },
-  payslipUrl: { type: String }, // Optional: attach PDF or external link
-
+  payslipUrl: { 
+    type: String 
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Payroll', payrollSchema);

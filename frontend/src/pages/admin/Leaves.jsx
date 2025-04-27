@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '@/services/apiService';
 import {
   Table,
   TableBody,
@@ -10,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Filter, Check, X } from 'lucide-react';
+import { Search, Filter, Check, X, Loader2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -28,66 +29,50 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 
-// Mock leave requests data
-const mockLeaveRequests = [
-  { 
-    id: '1', 
-    employee: 'John Employee', 
-    type: 'Annual Leave', 
-    startDate: '2025-05-01', 
-    endDate: '2025-05-05', 
-    days: 5, 
-    reason: 'Family vacation', 
-    status: 'Pending' 
-  },
-  { 
-    id: '2', 
-    employee: 'Sarah Johnson', 
-    type: 'Sick Leave', 
-    startDate: '2025-04-28', 
-    endDate: '2025-04-29', 
-    days: 2, 
-    reason: 'Not feeling well', 
-    status: 'Approved' 
-  },
-  { 
-    id: '3', 
-    employee: 'Michael Chen', 
-    type: 'Personal Leave', 
-    startDate: '2025-05-10', 
-    endDate: '2025-05-12', 
-    days: 3, 
-    reason: 'Personal matters', 
-    status: 'Pending' 
-  },
-  { 
-    id: '4', 
-    employee: 'Ana Rodriguez', 
-    type: 'Annual Leave', 
-    startDate: '2025-06-15', 
-    endDate: '2025-06-20', 
-    days: 6, 
-    reason: 'Summer vacation', 
-    status: 'Pending' 
-  },
-  { 
-    id: '5', 
-    employee: 'David Kim', 
-    type: 'Sick Leave', 
-    startDate: '2025-04-15', 
-    endDate: '2025-04-16', 
-    days: 2, 
-    reason: 'Doctor appointment', 
-    status: 'Rejected' 
-  },
-];
-
 const LeaveRequests = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [leaveRequests, setLeaveRequests] = useState(mockLeaveRequests);
+  
+  // State for leave requests
+  const [leaveRequests, setLeaveRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Fetch leave requests
+  useEffect(() => {
+    const fetchLeaveRequests = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/leaves');
+        
+        // Format the data
+        const formattedRequests = response.data.map(leave => ({
+          id: leave._id,
+          employee: leave.employee?.name || 'Unknown',
+          employeeId: leave.employee?._id || '',
+          type: leave.leaveType || 'Unknown',
+          startDate: new Date(leave.startDate).toISOString().split('T')[0],
+          endDate: new Date(leave.endDate).toISOString().split('T')[0],
+          days: leave.days || 0,
+          reason: leave.reason || '',
+          status: leave.status || 'Pending'
+        }));
+        
+        setLeaveRequests(formattedRequests);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching leave requests:', err);
+        setError('Failed to fetch leave requests');
+        toast.error('Failed to fetch leave requests');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchLeaveRequests();
+  }, []);
   
   // Filter leave requests based on search and filters
   const filteredRequests = leaveRequests.filter(request => {
@@ -105,28 +90,46 @@ const LeaveRequests = () => {
     setDialogOpen(true);
   };
   
-  const handleApprove = () => {
-    setLeaveRequests(prev => 
-      prev.map(req => 
-        req.id === selectedRequest.id 
-          ? { ...req, status: 'Approved' } 
-          : req
-      )
-    );
-    setDialogOpen(false);
-    toast.success(`Leave request for ${selectedRequest.employee} has been approved`);
+  const handleApprove = async () => {
+    try {
+      await api.put(`/leaves/${selectedRequest.id}/approve`);
+      
+      // Update the local state
+      setLeaveRequests(prev => 
+        prev.map(req => 
+          req.id === selectedRequest.id 
+            ? { ...req, status: 'Approved' } 
+            : req
+        )
+      );
+      
+      setDialogOpen(false);
+      toast.success(`Leave request for ${selectedRequest.employee} has been approved`);
+    } catch (err) {
+      console.error('Error approving leave request:', err);
+      toast.error('Failed to approve leave request');
+    }
   };
   
-  const handleReject = () => {
-    setLeaveRequests(prev => 
-      prev.map(req => 
-        req.id === selectedRequest.id 
-          ? { ...req, status: 'Rejected' } 
-          : req
-      )
-    );
-    setDialogOpen(false);
-    toast.success(`Leave request for ${selectedRequest.employee} has been rejected`);
+  const handleReject = async () => {
+    try {
+      await api.put(`/leaves/${selectedRequest.id}/reject`);
+      
+      // Update the local state
+      setLeaveRequests(prev => 
+        prev.map(req => 
+          req.id === selectedRequest.id 
+            ? { ...req, status: 'Rejected' } 
+            : req
+        )
+      );
+      
+      setDialogOpen(false);
+      toast.success(`Leave request for ${selectedRequest.employee} has been rejected`);
+    } catch (err) {
+      console.error('Error rejecting leave request:', err);
+      toast.error('Failed to reject leave request');
+    }
   };
   
   return (
@@ -169,58 +172,68 @@ const LeaveRequests = () => {
       
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Leave Type</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
-                <TableHead>Days</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRequests.length > 0 ? (
-                filteredRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-medium">{request.employee}</TableCell>
-                    <TableCell>{request.type}</TableCell>
-                    <TableCell>{request.startDate}</TableCell>
-                    <TableCell>{request.endDate}</TableCell>
-                    <TableCell>{request.days}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        request.status === 'Approved' 
-                          ? 'bg-green-100 text-green-800' 
-                          : request.status === 'Pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                      }`}>
-                        {request.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewDetails(request)}
-                      >
-                        View Details
-                      </Button>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center h-64 text-red-500">
+              {error}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employee</TableHead>
+                  <TableHead>Leave Type</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
+                  <TableHead>Days</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRequests.length > 0 ? (
+                  filteredRequests.map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell className="font-medium">{request.employee}</TableCell>
+                      <TableCell>{request.type}</TableCell>
+                      <TableCell>{request.startDate}</TableCell>
+                      <TableCell>{request.endDate}</TableCell>
+                      <TableCell>{request.days}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          request.status === 'Approved' 
+                            ? 'bg-green-100 text-green-800' 
+                            : request.status === 'Pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                        }`}>
+                          {request.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewDetails(request)}
+                        >
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      No leave requests found.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    No leave requests found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
       

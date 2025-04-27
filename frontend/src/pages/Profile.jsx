@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import api from '@/services/apiService';
+import { getFileUrl } from '@/lib/utils';
 import { 
   User, 
   Mail, 
@@ -19,50 +21,126 @@ import {
   GraduationCap,
   Wallet,
   CreditCard,
-  Landmark
+  Landmark,
+  Loader2
 } from 'lucide-react';
 
 const Profile = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('personal');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
   
   // Personal information form state
   const [personalInfo, setPersonalInfo] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '+1 (555) 123-4567',
-    address: '123 Main St, City, State, 12345',
-    dateOfBirth: '1990-01-01',
-    gender: 'Male',
-    emergencyContact: 'Jane Doe',
-    emergencyPhone: '+1 (555) 987-6543',
+    phone: '',
+    address: '',
+    dateOfBirth: '',
+    gender: '',
+    emergencyContact: '',
+    emergencyPhone: '',
   });
   
   // Professional information form state
   const [professionalInfo, setProfessionalInfo] = useState({
-    department: 'Engineering',
-    position: 'Software Developer',
-    employeeId: 'EMP-001',
-    joinDate: '2020-01-15',
-    manager: 'John Manager',
-    workLocation: 'Main Office',
+    department: '',
+    position: '',
+    employeeId: '',
+    joinDate: '',
+    manager: '',
+    workLocation: '',
     workEmail: user?.email || '',
-    workPhone: '+1 (555) 222-3333',
-    education: 'Bachelor of Science in Computer Science',
-    skills: 'JavaScript, React, Node.js, SQL',
+    workPhone: '',
+    education: '',
+    skills: '',
   });
   
   // Bank information form state
   const [bankInfo, setBankInfo] = useState({
     accountName: user?.name || '',
-    accountNumber: '************1234',
-    bankName: 'National Bank',
-    branch: 'Main Branch',
-    ifscCode: 'NATL0001234',
-    panCard: 'ABCDE1234F',
-    salary: '$85,000',
-    taxInformation: '25%',
+    accountNumber: '',
+    bankName: '',
+    branch: '',
+    ifscCode: '',
+    panCard: '',
+    salary: '',
+    taxInformation: '',
   });
+  
+  // Loading states for save operations
+  const [isSavingPersonal, setIsSavingPersonal] = useState(false);
+  const [isSavingProfessional, setIsSavingProfessional] = useState(false);
+  const [isSavingBank, setIsSavingBank] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  
+  // Fetch profile data
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user?._id) return;
+      
+      try {
+        setIsLoading(true);
+        const response = await api.get(`/profile/${user._id}`);
+        
+        // Update personal info
+        if (response.data.personal) {
+          setPersonalInfo({
+            name: response.data.personal.name || user?.name || '',
+            email: response.data.personal.email || user?.email || '',
+            phone: response.data.personal.phone || '',
+            address: response.data.personal.address || '',
+            dateOfBirth: response.data.personal.dateOfBirth || '',
+            gender: response.data.personal.gender || '',
+            emergencyContact: response.data.personal.emergencyContact || '',
+            emergencyPhone: response.data.personal.emergencyPhone || '',
+          });
+        }
+        
+        // Update professional info
+        if (response.data.professional) {
+          setProfessionalInfo({
+            department: response.data.professional.department || '',
+            position: response.data.professional.position || '',
+            employeeId: response.data.professional.employeeId || '',
+            joinDate: response.data.professional.joinDate || '',
+            manager: response.data.professional.manager || '',
+            workLocation: response.data.professional.workLocation || '',
+            workEmail: response.data.professional.workEmail || user?.email || '',
+            workPhone: response.data.professional.workPhone || '',
+            education: response.data.professional.education || '',
+            skills: response.data.professional.skills || '',
+          });
+        }
+        
+        // Update bank info
+        if (response.data.bank) {
+          setBankInfo({
+            accountName: response.data.bank.accountName || user?.name || '',
+            accountNumber: response.data.bank.accountNumber || '',
+            bankName: response.data.bank.bankName || '',
+            branch: response.data.bank.branch || '',
+            ifscCode: response.data.bank.ifscCode || '',
+            panCard: response.data.bank.panCard || '',
+            salary: response.data.bank.salary || '',
+            taxInformation: response.data.bank.taxInformation || '',
+          });
+        }
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching profile data:', err);
+        setError('Failed to fetch profile data');
+        toast.error('Failed to load profile data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProfileData();
+  }, [user]);
   
   const handlePersonalInfoChange = (e) => {
     const { name, value } = e.target;
@@ -79,17 +157,130 @@ const Profile = () => {
     setBankInfo(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSavePersonalInfo = () => {
-    toast.success('Personal information updated successfully');
+  const handleAvatarChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setAvatarFile(e.target.files[0]);
+    }
   };
   
-  const handleSaveProfessionalInfo = () => {
-    toast.success('Professional information updated successfully');
+  const handleUploadAvatar = async () => {
+    if (!avatarFile) {
+      toast.error('Please select an image to upload');
+      return;
+    }
+    
+    try {
+      setIsUploadingAvatar(true);
+      
+      const formData = new FormData();
+      formData.append('avatar', avatarFile);
+      
+      const response = await api.post(`/profile/${user._id}/avatar`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Update user object in localStorage with new avatar URL
+      if (response.data && response.data.avatarUrl) {
+        // Get current user data from localStorage
+        const savedUser = localStorage.getItem('hrms_user');
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
+          // Update avatar URL
+          userData.avatar = response.data.avatarUrl;
+          // Save updated user data back to localStorage
+          localStorage.setItem('hrms_user', JSON.stringify(userData));
+          
+          // Update user in state (this would refresh the UI)
+          if (user) {
+            user.avatar = response.data.avatarUrl;
+          }
+        }
+      }
+      
+      toast.success('Avatar updated successfully');
+      setAvatarFile(null);
+      
+      // Force refresh the page to show the new avatar
+      window.location.reload();
+    } catch (err) {
+      console.error('Error uploading avatar:', err);
+      toast.error('Failed to upload avatar');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
   
-  const handleSaveBankInfo = () => {
-    toast.success('Bank information updated successfully');
+  const handleSavePersonalInfo = async () => {
+    try {
+      setIsSavingPersonal(true);
+      
+      await api.put(`/profile/${user._id}/personal`, personalInfo);
+      
+      toast.success('Personal information updated successfully');
+    } catch (err) {
+      console.error('Error updating personal information:', err);
+      toast.error('Failed to update personal information');
+    } finally {
+      setIsSavingPersonal(false);
+    }
   };
+  
+  const handleSaveProfessionalInfo = async () => {
+    try {
+      setIsSavingProfessional(true);
+      
+      await api.put(`/profile/${user._id}/professional`, professionalInfo);
+      
+      toast.success('Professional information updated successfully');
+    } catch (err) {
+      console.error('Error updating professional information:', err);
+      toast.error('Failed to update professional information');
+    } finally {
+      setIsSavingProfessional(false);
+    }
+  };
+  
+  const handleSaveBankInfo = async () => {
+    try {
+      setIsSavingBank(true);
+      
+      await api.put(`/profile/${user._id}/bank`, bankInfo);
+      
+      toast.success('Bank information updated successfully');
+    } catch (err) {
+      console.error('Error updating bank information:', err);
+      toast.error('Failed to update bank information');
+    } finally {
+      setIsSavingBank(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 text-red-500 p-4 rounded-lg text-center">
+          {error}
+          <Button 
+            variant="outline" 
+            className="mt-2"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -97,12 +288,42 @@ const Profile = () => {
         <div className="flex flex-col md:flex-row md:items-center gap-6 mb-6">
           <div className="flex flex-col items-center">
             <Avatar className="h-24 w-24">
-              <AvatarImage src="" alt={user?.name} />
+              <AvatarImage src={getFileUrl(user?.avatar)} alt={user?.name} />
               <AvatarFallback className="text-2xl">{user?.name?.charAt(0)}</AvatarFallback>
             </Avatar>
-            <Button variant="outline" size="sm" className="mt-2">
-              Change Avatar
-            </Button>
+            <div className="mt-2 flex flex-col items-center">
+              <input
+                type="file"
+                id="avatar-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
+              <label htmlFor="avatar-upload">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="cursor-pointer"
+                  disabled={isUploadingAvatar}
+                  onClick={() => document.getElementById('avatar-upload').click()}
+                >
+                  {isUploadingAvatar ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
+                  Select Image
+                </Button>
+              </label>
+              {avatarFile && (
+                <Button 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={handleUploadAvatar}
+                  disabled={isUploadingAvatar}
+                >
+                  Upload
+                </Button>
+              )}
+            </div>
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">{user?.name}</h1>
@@ -232,7 +453,15 @@ const Profile = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end">
-                <Button onClick={handleSavePersonalInfo}>Save Changes</Button>
+                <Button 
+                  onClick={handleSavePersonalInfo}
+                  disabled={isSavingPersonal}
+                >
+                  {isSavingPersonal ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
+                  Save Changes
+                </Button>
               </CardFooter>
             </Card>
           </TabsContent>
@@ -389,7 +618,15 @@ const Profile = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end">
-                <Button onClick={handleSaveProfessionalInfo}>Save Changes</Button>
+                <Button 
+                  onClick={handleSaveProfessionalInfo}
+                  disabled={isSavingProfessional}
+                >
+                  {isSavingProfessional ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
+                  Save Changes
+                </Button>
               </CardFooter>
             </Card>
           </TabsContent>
@@ -510,7 +747,15 @@ const Profile = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end">
-                <Button onClick={handleSaveBankInfo}>Save Changes</Button>
+                <Button 
+                  onClick={handleSaveBankInfo}
+                  disabled={isSavingBank}
+                >
+                  {isSavingBank ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
+                  Save Changes
+                </Button>
               </CardFooter>
             </Card>
           </TabsContent>

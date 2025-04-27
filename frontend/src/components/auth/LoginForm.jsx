@@ -41,12 +41,10 @@ const LoginForm = () => {
   const onSubmit = async (data) => {
     try {
       const user = await login(data.email, data.password);
+      // The login function in useAuth already dispatches the setCredentials action
+      // with the user and token from the API response, so we don't need to do it here
+      
       if (user) {
-        dispatch(setCredentials({ 
-          user, 
-          token: 'mock-jwt-token' 
-        }));
-        
         if (user.role === 'admin' || user.role === 'hr') {
           navigate('/admin/dashboard');
         } else {
@@ -55,6 +53,7 @@ const LoginForm = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
+      // Error is already handled by the useAuth hook with toast notifications
     }
   };
 

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '@/services/apiService';
+import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
-import { MessageSquare, User, Star } from 'lucide-react';
+import { MessageSquare, User, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -29,19 +31,26 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
-// Mock data
-const mockEmployees = [
-  { id: '1', name: 'Sarah Johnson', department: 'Marketing' },
-  { id: '2', name: 'Mike Wilson', department: 'Engineering' },
-  { id: '3', name: 'Emily Davis', department: 'HR' },
-  { id: '4', name: 'Alex Morgan', department: 'Finance' },
-];
+// Form validation schema
+const formSchema = z.object({
+  feedback: z.string().min(5, "Feedback must be at least 5 characters"),
+  recipient: z.string().min(1, "Recipient is required"),
+  isAnonymous: z.boolean(),
+  rating: z.string().min(1, "Rating is required"),
+});
 
 const FeedbackForm = () => {
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       feedback: '',
       recipient: '',
@@ -50,25 +59,67 @@ const FeedbackForm = () => {
     },
   });
   
+  // Fetch employees from the backend
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/employees');
+        setEmployees(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching employees:', err);
+        setError('Failed to fetch employees');
+        // Fallback to empty array if the API call fails
+        setEmployees([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchEmployees();
+  }, []);
+  
   const onSubmit = async (data) => {
+    if (!user?._id && !data.isAnonymous) {
+      toast.error('User information not available');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // In a real app, this would be an API call
-      console.log('Submitting feedback:', data);
+      // Prepare the feedback data
+      const feedbackData = {
+        senderId: data.isAnonymous ? null : user._id,
+        recipientId: data.recipient,
+        content: data.feedback,
+        rating: parseInt(data.rating),
+        isAnonymous: data.isAnonymous
+      };
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Make the API call to submit the feedback
+      await api.post('/feedback', feedbackData);
       
       toast.success('Feedback submitted successfully');
       form.reset();
-    } catch (error) {
-      toast.error('Failed to submit feedback');
-      console.error(error);
+    } catch (err) {
+      console.error('Error submitting feedback:', err);
+      toast.error(err.response?.data?.message || 'Failed to submit feedback');
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card>
@@ -96,9 +147,12 @@ const FeedbackForm = () => {
                     <SelectContent>
                       <SelectItem value="hr">HR Department</SelectItem>
                       <SelectItem value="management">Management</SelectItem>
-                      {mockEmployees.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>
-                          {employee.name} ({employee.department})
+                      {employees.map((employee) => (
+                        <SelectItem 
+                          key={employee._id || employee.id} 
+                          value={employee._id || employee.id}
+                        >
+                          {employee.name} ({employee.department || 'N/A'})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -183,7 +237,14 @@ const FeedbackForm = () => {
               className="w-full bg-hrms-blue hover:bg-blue-700"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Feedback'
+              )}
             </Button>
           </form>
         </Form>

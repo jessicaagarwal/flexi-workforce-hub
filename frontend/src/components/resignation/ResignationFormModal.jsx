@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import api from '@/services/apiService';
+import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -33,7 +35,20 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { addDays, format } from 'date-fns';
 import { toast } from 'sonner';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
+// Form validation schema
+const formSchema = z.object({
+  resignationReason: z.string().min(1, "Reason is required"),
+  lastWorkingDate: z.date({
+    required_error: "Last working date is required",
+  }),
+  feedback: z.string().optional(),
+  exitSurvey: z.string().optional(),
+});
+
+// Static list of resignation reasons
 const resignationReasons = [
   'Better opportunity elsewhere',
   'Career change',
@@ -46,10 +61,12 @@ const resignationReasons = [
 ];
 
 const ResignationFormModal = ({ children }) => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       resignationReason: '',
       lastWorkingDate: addDays(new Date(), 30),
@@ -59,21 +76,32 @@ const ResignationFormModal = ({ children }) => {
   });
   
   const onSubmit = async (data) => {
+    if (!user?._id) {
+      toast.error('User information not available');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // In a real app, this would be an API call
-      console.log('Submitting resignation:', data);
+      // Format the data for the API
+      const resignationData = {
+        employeeId: user._id,
+        reason: data.resignationReason,
+        lastWorkingDate: format(data.lastWorkingDate, 'yyyy-MM-dd'),
+        feedback: data.feedback,
+        exitSurvey: data.exitSurvey
+      };
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Make the API call to submit the resignation
+      await api.post('/resignations', resignationData);
       
       toast.success('Resignation submitted successfully');
       setIsOpen(false);
       form.reset();
-    } catch (error) {
-      toast.error('Failed to submit resignation');
-      console.error(error);
+    } catch (err) {
+      console.error('Error submitting resignation:', err);
+      toast.error(err.response?.data?.message || 'Failed to submit resignation');
     } finally {
       setIsSubmitting(false);
     }
@@ -216,7 +244,14 @@ const ResignationFormModal = ({ children }) => {
                 className="bg-red-500 hover:bg-red-600"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Resignation'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Resignation'
+                )}
               </Button>
             </DialogFooter>
           </form>

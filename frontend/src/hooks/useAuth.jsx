@@ -1,30 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-
-// Mock user data for demonstration
-const MOCK_USERS = [
-  {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@hrx.com',
-    password: 'admin123',
-    role: 'admin',
-  },
-  {
-    id: '2',
-    name: 'HR Manager',
-    email: 'hr@hrx.com',
-    password: 'hr123',
-    role: 'hr',
-  },
-  {
-    id: '3',
-    name: 'John Employee',
-    email: 'employee@hrx.com',
-    password: 'employee123',
-    role: 'employee',
-  },
-];
+import api from '../services/apiService';
+import { useDispatch } from 'react-redux';
+import { setCredentials, clearCredentials, setLoading as setReduxLoading } from '../redux/authSlice';
 
 // Create context
 const AuthContext = createContext(undefined);
@@ -32,74 +10,83 @@ const AuthContext = createContext(undefined);
 // Provider component
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useDispatch();
   
   useEffect(() => {
-    // Check for saved user in localStorage
+    // Check for saved auth data in localStorage
     const savedUser = localStorage.getItem('hrms_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    const savedToken = localStorage.getItem('hrms_token');
+    
+    if (savedUser && savedToken) {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+      setToken(savedToken);
+      
+      // Also update Redux store
+      dispatch(setCredentials({ user: parsedUser, token: savedToken }));
     }
+    
     setIsLoading(false);
-  }, []);
+    dispatch(setReduxLoading(false));
+  }, [dispatch]);
   
   const login = async (email, password) => {
     setIsLoading(true);
+    dispatch(setReduxLoading(true));
     
     try {
-      // Simulate API request delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Find user with matching credentials
-      const foundUser = MOCK_USERS.find(
-        u => u.email === email && u.password === password
-      );
-      
-      if (!foundUser) {
-        throw new Error('Invalid email or password');
-      }
-      
-      // Create user object (without password)
-      const { password: _, ...userWithoutPassword } = foundUser;
+      // Make real API call to login endpoint
+      const response = await api.post('/auth/login', { email, password });
+      const { token, ...userData } = response.data;
       
       // Save to state and localStorage
-      setUser(userWithoutPassword);
-      localStorage.setItem('hrms_user', JSON.stringify(userWithoutPassword));
+      setUser(userData);
+      setToken(token);
+      localStorage.setItem('hrms_user', JSON.stringify(userData));
+      localStorage.setItem('hrms_token', token);
+      
+      // Update Redux store
+      dispatch(setCredentials({ user: userData, token }));
       
       toast.success('Login successful!');
-      return userWithoutPassword; // Return the user object for navigation in the component
+      return userData; // Return the user object for navigation in the component
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Login failed');
+      const errorMessage = error.response?.data?.message || 'Login failed';
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsLoading(false);
+      dispatch(setReduxLoading(false));
     }
   };
   
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem('hrms_user');
+    localStorage.removeItem('hrms_token');
+    
+    // Update Redux store
+    dispatch(clearCredentials());
+    
     toast.success('Logged out successfully');
     // Navigation will be handled by the component that calls this function
   };
   
-  const register = async (name, email, password) => {
+  const register = async (name, email, password, role = 'employee') => {
     setIsLoading(true);
     
     try {
-      // Simulate API request delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Make real API call to register endpoint
+      await api.post('/auth/register', { name, email, password, role });
       
-      // Check if email already exists
-      if (MOCK_USERS.some(u => u.email === email)) {
-        throw new Error('Email already in use');
-      }
-      
-      // In a real app, this would send data to the backend
       toast.success('Registration successful! Please login.');
       return true; // Return success for navigation in the component
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Registration failed');
+      const errorMessage = error.response?.data?.message || 'Registration failed';
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsLoading(false);
@@ -110,7 +97,8 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        token,
+        isAuthenticated: !!user && !!token,
         isLoading,
         login,
         logout,

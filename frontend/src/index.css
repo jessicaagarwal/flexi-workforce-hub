@@ -43,6 +43,45 @@
     --sidebar-ring: 172 100% 34%;
   }
 
+  .dark {
+    --background: 220 20% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 220 20% 13%;
+    --card-foreground: 0 0% 98%;
+    --popover: 220 20% 13%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 172 100% 34%; /* Keep the same primary color */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 220 20% 16%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 220 20% 16%;
+    --muted-foreground: 220 20% 70%;
+
+    --accent: 220 20% 16%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 4 90% 58%; /* Keep the same destructive color */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 172 100% 34%;
+
+    /* Sidebar colors for dark mode */
+    --sidebar-background: 220 20% 8%; /* darker than background */
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 172 100% 34%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 172 100% 28%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 172 100% 26%;
+    --sidebar-ring: 172 100% 34%;
+  }
+
   * {
     @apply border-border;
     scroll-behavior: smooth;

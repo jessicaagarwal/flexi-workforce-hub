@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '@/services/apiService';
+import { toast } from 'sonner';
 import { 
   Card, 
   CardContent, 
@@ -24,30 +26,219 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Plus, Award, Star, ChevronRight } from 'lucide-react';
-
-// Mock employees performance data
-const mockPerformanceData = [
-  { id: 1, employeeId: 'EMP001', name: 'John Employee', department: 'Engineering', rating: 4.2, lastReview: 'March 15, 2025', nextReview: 'June 15, 2025', status: 'On Track' },
-  { id: 2, employeeId: 'EMP003', name: 'Sarah Johnson', department: 'Design', rating: 4.5, lastReview: 'February 10, 2025', nextReview: 'May 10, 2025', status: 'Excellent' },
-  { id: 3, employeeId: 'EMP005', name: 'Michael Chen', department: 'Marketing', rating: 3.8, lastReview: 'April 05, 2025', nextReview: 'July 05, 2025', status: 'Needs Improvement' },
-  { id: 4, employeeId: 'EMP002', name: 'Ana Rodriguez', department: 'Engineering', rating: 4.7, lastReview: 'March 20, 2025', nextReview: 'June 20, 2025', status: 'Excellent' },
-  { id: 5, employeeId: 'EMP004', name: 'David Kim', department: 'HR', rating: 4.0, lastReview: 'January 25, 2025', nextReview: 'April 25, 2025', status: 'On Track' },
-];
-
-// Mock upcoming reviews
-const mockUpcomingReviews = [
-  { id: 1, employeeId: 'EMP004', name: 'David Kim', department: 'HR', reviewDate: 'April 25, 2025', currentRating: 4.0, reviewer: 'Jessica Wang', status: 'Scheduled' },
-  { id: 2, employeeId: 'EMP008', name: 'Emily Davis', department: 'Finance', reviewDate: 'April 28, 2025', currentRating: 3.9, reviewer: 'Jessica Wang', status: 'Scheduled' },
-  { id: 3, employeeId: 'EMP012', name: 'Robert Smith', department: 'Customer Support', reviewDate: 'May 02, 2025', currentRating: 4.1, reviewer: 'Jessica Wang', status: 'Not Started' },
-];
+import { Search, Plus, Award, Star, ChevronRight, Loader2 } from 'lucide-react';
 
 const AdminPerformance = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   
+  // State for performance data
+  const [performanceData, setPerformanceData] = useState([]);
+  const [isLoadingPerformance, setIsLoadingPerformance] = useState(true);
+  const [performanceError, setPerformanceError] = useState(null);
+  
+  // State for upcoming reviews
+  const [upcomingReviews, setUpcomingReviews] = useState([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [reviewsError, setReviewsError] = useState(null);
+  
+  // State for review templates
+  const [reviewTemplates, setReviewTemplates] = useState([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+  const [templatesError, setTemplatesError] = useState(null);
+  
+  // State for performance stats
+  const [performanceStats, setPerformanceStats] = useState({
+    averageRating: 0,
+    upcomingReviewsCount: 0,
+    topPerformersCount: 0
+  });
+  
+  // State for creating a new review
+  const [isCreatingReview, setIsCreatingReview] = useState(false);
+  
+  // Fetch performance data
+  useEffect(() => {
+    const fetchPerformanceData = async () => {
+      try {
+        setIsLoadingPerformance(true);
+        const response = await api.get('/performance');
+        
+        // Format the data
+        const formattedData = response.data.map(performance => ({
+          id: performance._id,
+          employeeId: performance.employee?.employeeId || 'N/A',
+          name: performance.employee?.name || 'Unknown',
+          department: performance.employee?.department || 'N/A',
+          rating: performance.rating || 0,
+          lastReview: performance.lastReviewDate ? new Date(performance.lastReviewDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }) : 'N/A',
+          nextReview: performance.nextReviewDate ? new Date(performance.nextReviewDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }) : 'N/A',
+          status: performance.status || 'Not Rated'
+        }));
+        
+        setPerformanceData(formattedData);
+        setPerformanceError(null);
+      } catch (err) {
+        console.error('Error fetching performance data:', err);
+        setPerformanceError('Failed to fetch performance data');
+        toast.error('Failed to fetch performance data');
+      } finally {
+        setIsLoadingPerformance(false);
+      }
+    };
+    
+    fetchPerformanceData();
+  }, []);
+  
+  // Fetch upcoming reviews
+  useEffect(() => {
+    const fetchUpcomingReviews = async () => {
+      try {
+        setIsLoadingReviews(true);
+        const response = await api.get('/performance/upcoming');
+        
+        // Format the data
+        const formattedReviews = response.data.map(review => ({
+          id: review._id,
+          employeeId: review.employee?.employeeId || 'N/A',
+          name: review.employee?.name || 'Unknown',
+          department: review.employee?.department || 'N/A',
+          reviewDate: new Date(review.reviewDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          currentRating: review.currentRating || 0,
+          reviewer: review.reviewer?.name || 'Not Assigned',
+          status: review.status || 'Not Started'
+        }));
+        
+        setUpcomingReviews(formattedReviews);
+        setReviewsError(null);
+        
+        // Update performance stats
+        setPerformanceStats(prev => ({
+          ...prev,
+          upcomingReviewsCount: formattedReviews.length
+        }));
+      } catch (err) {
+        console.error('Error fetching upcoming reviews:', err);
+        setReviewsError('Failed to fetch upcoming reviews');
+        // Don't show toast for this error to avoid multiple error messages
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    };
+    
+    fetchUpcomingReviews();
+  }, []);
+  
+  // Fetch review templates
+  useEffect(() => {
+    const fetchReviewTemplates = async () => {
+      try {
+        setIsLoadingTemplates(true);
+        const response = await api.get('/performance/templates');
+        
+        // Format the data
+        const formattedTemplates = response.data.map(template => ({
+          id: template._id,
+          name: template.name,
+          description: template.description,
+          lastUpdated: new Date(template.updatedAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          usedBy: template.departments?.join(', ') || 'All Departments'
+        }));
+        
+        setReviewTemplates(formattedTemplates);
+        setTemplatesError(null);
+      } catch (err) {
+        console.error('Error fetching review templates:', err);
+        setTemplatesError('Failed to fetch review templates');
+        // Don't show toast for this error to avoid multiple error messages
+      } finally {
+        setIsLoadingTemplates(false);
+      }
+    };
+    
+    fetchReviewTemplates();
+  }, []);
+  
+  // Fetch performance stats
+  useEffect(() => {
+    const fetchPerformanceStats = async () => {
+      try {
+        const response = await api.get('/performance/stats');
+        
+        setPerformanceStats({
+          averageRating: response.data.averageRating || 0,
+          upcomingReviewsCount: response.data.upcomingReviewsCount || 0,
+          topPerformersCount: response.data.topPerformersCount || 0
+        });
+      } catch (err) {
+        console.error('Error fetching performance stats:', err);
+        // Don't show error toast for stats to avoid multiple error messages
+      }
+    };
+    
+    fetchPerformanceStats();
+  }, []);
+  
+  // Handle start review
+  const handleStartReview = async (id) => {
+    try {
+      await api.post(`/performance/reviews/${id}/start`);
+      
+      toast.success('Review started successfully');
+      
+      // Update upcoming reviews
+      const response = await api.get('/performance/upcoming');
+      setUpcomingReviews(response.data);
+    } catch (err) {
+      console.error('Error starting review:', err);
+      toast.error('Failed to start review');
+    }
+  };
+  
+  // Handle create new review
+  const handleCreateReview = async () => {
+    setIsCreatingReview(true);
+    
+    try {
+      // In a real app, this would open a modal or navigate to a form
+      toast.info('This would open a form to create a new review');
+    } catch (err) {
+      console.error('Error creating review:', err);
+      toast.error('Failed to create review');
+    } finally {
+      setIsCreatingReview(false);
+    }
+  };
+  
+  // Handle create new template
+  const handleCreateTemplate = async () => {
+    try {
+      // In a real app, this would open a modal or navigate to a form
+      toast.info('This would open a form to create a new template');
+    } catch (err) {
+      console.error('Error creating template:', err);
+      toast.error('Failed to create template');
+    }
+  };
+  
   // Filter performance data based on search and department
-  const filteredPerformance = mockPerformanceData.filter(employee => {
+  const filteredPerformance = performanceData.filter(employee => {
     const matchesSearch = 
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
@@ -73,12 +264,12 @@ const AdminPerformance = () => {
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <div className="text-3xl font-bold mr-2">4.2</div>
+              <div className="text-3xl font-bold mr-2">{performanceStats.averageRating.toFixed(1)}</div>
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star 
                     key={star} 
-                    fill={star <= 4 ? 'currentColor' : 'none'} 
+                    fill={star <= Math.round(performanceStats.averageRating) ? 'currentColor' : 'none'} 
                     className="h-4 w-4 text-yellow-400" 
                   />
                 ))}
@@ -93,7 +284,7 @@ const AdminPerformance = () => {
             <CardTitle className="text-sm font-medium">Upcoming Reviews</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">8</div>
+            <div className="text-3xl font-bold">{performanceStats.upcomingReviewsCount}</div>
             <p className="text-xs text-muted-foreground mt-1">In the next 30 days</p>
           </CardContent>
         </Card>
@@ -103,7 +294,7 @@ const AdminPerformance = () => {
             <CardTitle className="text-sm font-medium">Top Performers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">16</div>
+            <div className="text-3xl font-bold">{performanceStats.topPerformersCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Employees with 4.5+ rating</p>
           </CardContent>
         </Card>
@@ -146,62 +337,88 @@ const AdminPerformance = () => {
                 </SelectContent>
               </Select>
               
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New Review
+              <Button 
+                onClick={handleCreateReview}
+                disabled={isCreatingReview}
+              >
+                {isCreatingReview ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Review
+                  </>
+                )}
               </Button>
             </div>
           </div>
           
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Last Review</TableHead>
-                    <TableHead>Next Review</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPerformance.map((employee) => (
-                    <TableRow key={employee.id}>
-                      <TableCell>{employee.employeeId}</TableCell>
-                      <TableCell className="font-medium">{employee.name}</TableCell>
-                      <TableCell>{employee.department}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <span className="font-medium mr-1">{employee.rating}</span>
-                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        </div>
-                      </TableCell>
-                      <TableCell>{employee.lastReview}</TableCell>
-                      <TableCell>{employee.nextReview}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          employee.status === 'Excellent' 
-                            ? 'bg-green-100 text-green-800' 
-                            : employee.status === 'On Track'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {employee.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon">
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+              {isLoadingPerformance ? (
+                <div className="flex justify-center items-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : performanceError ? (
+                <div className="flex justify-center items-center h-64 text-red-500">
+                  {performanceError}
+                </div>
+              ) : filteredPerformance.length === 0 ? (
+                <div className="flex justify-center items-center h-64 text-muted-foreground">
+                  No performance data found
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Employee ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Last Review</TableHead>
+                      <TableHead>Next Review</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPerformance.map((employee) => (
+                      <TableRow key={employee.id}>
+                        <TableCell>{employee.employeeId}</TableCell>
+                        <TableCell className="font-medium">{employee.name}</TableCell>
+                        <TableCell>{employee.department}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <span className="font-medium mr-1">{employee.rating.toFixed(1)}</span>
+                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          </div>
+                        </TableCell>
+                        <TableCell>{employee.lastReview}</TableCell>
+                        <TableCell>{employee.nextReview}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            employee.status === 'Excellent' 
+                              ? 'bg-green-100 text-green-800' 
+                              : employee.status === 'On Track'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {employee.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon">
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -213,54 +430,73 @@ const AdminPerformance = () => {
               <CardDescription>Reviews scheduled in the next 30 days</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Current Rating</TableHead>
-                    <TableHead>Review Date</TableHead>
-                    <TableHead>Reviewer</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockUpcomingReviews.map((review) => (
-                    <TableRow key={review.id}>
-                      <TableCell>
-                        <div className="font-medium">{review.name}</div>
-                        <div className="text-sm text-muted-foreground">{review.employeeId}</div>
-                      </TableCell>
-                      <TableCell>{review.department}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <span className="font-medium mr-1">{review.currentRating}</span>
-                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        </div>
-                      </TableCell>
-                      <TableCell>{review.reviewDate}</TableCell>
-                      <TableCell>{review.reviewer}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          review.status === 'Completed' 
-                            ? 'bg-green-100 text-green-800' 
-                            : review.status === 'Scheduled'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {review.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm">
-                          Start Review
-                        </Button>
-                      </TableCell>
+              {isLoadingReviews ? (
+                <div className="flex justify-center items-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : reviewsError ? (
+                <div className="flex justify-center items-center h-64 text-red-500">
+                  {reviewsError}
+                </div>
+              ) : upcomingReviews.length === 0 ? (
+                <div className="flex justify-center items-center h-64 text-muted-foreground">
+                  No upcoming reviews found
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Current Rating</TableHead>
+                      <TableHead>Review Date</TableHead>
+                      <TableHead>Reviewer</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {upcomingReviews.map((review) => (
+                      <TableRow key={review.id}>
+                        <TableCell>
+                          <div className="font-medium">{review.name}</div>
+                          <div className="text-sm text-muted-foreground">{review.employeeId}</div>
+                        </TableCell>
+                        <TableCell>{review.department}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <span className="font-medium mr-1">{review.currentRating.toFixed(1)}</span>
+                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          </div>
+                        </TableCell>
+                        <TableCell>{review.reviewDate}</TableCell>
+                        <TableCell>{review.reviewer}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            review.status === 'Completed' 
+                              ? 'bg-green-100 text-green-800' 
+                              : review.status === 'Scheduled'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {review.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleStartReview(review.id)}
+                            disabled={review.status === 'Completed'}
+                          >
+                            Start Review
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -272,48 +508,45 @@ const AdminPerformance = () => {
               <CardDescription>Manage performance review templates</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Standard Review</CardTitle>
-                    <CardDescription>Basic performance review template</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Last Updated:</span>
-                        <span>March 15, 2025</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Used by:</span>
-                        <span>All Departments</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Engineering Review</CardTitle>
-                    <CardDescription>Specialized template for engineering team</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Last Updated:</span>
-                        <span>April 01, 2025</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Used by:</span>
-                        <span>Engineering Department</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              {isLoadingTemplates ? (
+                <div className="flex justify-center items-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : templatesError ? (
+                <div className="flex justify-center items-center h-64 text-red-500">
+                  {templatesError}
+                </div>
+              ) : reviewTemplates.length === 0 ? (
+                <div className="flex justify-center items-center h-64 text-muted-foreground">
+                  No review templates found
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {reviewTemplates.map(template => (
+                    <Card key={template.id}>
+                      <CardHeader>
+                        <CardTitle className="text-base">{template.name}</CardTitle>
+                        <CardDescription>{template.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Last Updated:</span>
+                            <span>{template.lastUpdated}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Used by:</span>
+                            <span>{template.usedBy}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
               
               <div className="mt-4 flex justify-end">
-                <Button>
+                <Button onClick={handleCreateTemplate}>
                   <Plus className="mr-2 h-4 w-4" />
                   Create New Template
                 </Button>

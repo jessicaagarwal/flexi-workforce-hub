@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Clock, CalendarIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock, CalendarIcon, Loader2 } from 'lucide-react';
+import api from '@/services/apiService';
+import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -33,17 +35,29 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
-const supervisors = [
-  { id: '1', name: 'John Manager' },
-  { id: '2', name: 'Sarah Director' },
-  { id: '3', name: 'Mike Supervisor' },
-];
+// Form validation schema
+const formSchema = z.object({
+  date: z.date({
+    required_error: "Date is required",
+  }),
+  checkInTime: z.string().min(1, "Check-in time is required"),
+  checkOutTime: z.string().min(1, "Check-out time is required"),
+  reason: z.string().min(5, "Reason must be at least 5 characters"),
+  supervisor: z.string().min(1, "Supervisor is required"),
+});
 
 const MissedAttendanceForm = () => {
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [supervisors, setSupervisors] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       date: new Date(),
       checkInTime: '',
@@ -53,25 +67,72 @@ const MissedAttendanceForm = () => {
     },
   });
   
+  // Fetch supervisors from the backend
+  useEffect(() => {
+    const fetchSupervisors = async () => {
+      try {
+        setIsLoading(true);
+        // In a real app, you would have an endpoint to fetch supervisors
+        // This is an example of what the endpoint might be
+        const response = await api.get('/employees/supervisors');
+        setSupervisors(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching supervisors:', err);
+        setError('Failed to fetch supervisors');
+        // Fallback to some default supervisors if the API call fails
+        setSupervisors([
+          { _id: '1', name: 'Default Supervisor' }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchSupervisors();
+  }, []);
+  
   const onSubmit = async (data) => {
+    if (!user?._id) {
+      toast.error('User information not available');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // In a real app, this would be an API call
-      console.log('Submitting missed attendance:', data);
+      // Convert the form data to the format expected by the API
+      const formattedData = {
+        employeeId: user._id,
+        date: format(data.date, 'yyyy-MM-dd'),
+        checkInTime: `${format(data.date, 'yyyy-MM-dd')}T${data.checkInTime}:00`,
+        checkOutTime: `${format(data.date, 'yyyy-MM-dd')}T${data.checkOutTime}:00`,
+        reason: data.reason,
+        supervisorId: data.supervisor
+      };
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Make the API call to submit the missed attendance
+      await api.post('/attendance/missed', formattedData);
       
       toast.success('Missed attendance request submitted successfully');
       form.reset();
-    } catch (error) {
-      toast.error('Failed to submit missed attendance request');
-      console.error(error);
+    } catch (err) {
+      console.error('Error submitting missed attendance:', err);
+      toast.error(err.response?.data?.message || 'Failed to submit missed attendance request');
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card>
@@ -179,7 +240,10 @@ const MissedAttendanceForm = () => {
                     </FormControl>
                     <SelectContent>
                       {supervisors.map((supervisor) => (
-                        <SelectItem key={supervisor.id} value={supervisor.id}>
+                        <SelectItem 
+                          key={supervisor._id || supervisor.id} 
+                          value={supervisor._id || supervisor.id}
+                        >
                           {supervisor.name}
                         </SelectItem>
                       ))}
@@ -216,7 +280,14 @@ const MissedAttendanceForm = () => {
               className="w-full bg-hrms-blue hover:bg-blue-700"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Request'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Request'
+              )}
             </Button>
           </form>
         </Form>
