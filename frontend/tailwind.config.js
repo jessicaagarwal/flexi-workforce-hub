@@ -24,45 +24,42 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: 'hsl(172,100%,34%)',
-					foreground: 'hsl(0,0%,98%)'
+					DEFAULT: 'hsl(var(--primary))',
+					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
-					DEFAULT: 'hsl(0,0%,96%)',
-					foreground: 'hsl(220,20%,20%)'
+					DEFAULT: 'hsl(var(--secondary))',
+					foreground: 'hsl(var(--secondary-foreground))'
 				},
 				destructive: {
-					DEFAULT: 'hsl(4,90%,58%)',
-					foreground: 'hsl(0,0%,98%)'
+					DEFAULT: 'hsl(var(--destructive))',
+					foreground: 'hsl(var(--destructive-foreground))'
 				},
 				muted: {
-					DEFAULT: 'hsl(0,0%,96%)',
-					foreground: 'hsl(220,20%,20%)'
+					DEFAULT: 'hsl(var(--muted))',
+					foreground: 'hsl(var(--muted-foreground))'
 				},
 				accent: {
-					DEFAULT: 'hsl(0,0%,96%)',
-					foreground: 'hsl(220,20%,20%)'
+					DEFAULT: 'hsl(var(--accent))',
+					foreground: 'hsl(var(--accent-foreground))'
 				},
 				popover: {
-					DEFAULT: 'hsl(0,0%,100%)',
-					foreground: 'hsl(220,20%,20%)'
+					DEFAULT: 'hsl(var(--popover))',
+					foreground: 'hsl(var(--popover-foreground))'
 				},
 				card: {
-					DEFAULT: 'hsl(0,0%,100%)',
-					foreground: 'hsl(220,20%,20%)'
+					DEFAULT: 'hsl(var(--card))',
+					foreground: 'hsl(var(--card-foreground))'
 				},
 				sidebar: {
-					DEFAULT: 'hsl(0,0%,100%)',
-					foreground: 'hsl(220,20%,20%)',
-					primary: 'hsl(172,100%,34%)',
-					'primary-foreground': 'hsl(0,0%,98%)',
-					accent: 'hsl(172,100%,28%)',
-					'accent-foreground': 'hsl(0,0%,98%)',
-					border: 'hsl(172,100%,26%)',
-					ring: 'hsl(172,100%,34%)'
+					DEFAULT: 'hsl(var(--sidebar-background))',
+					foreground: 'hsl(var(--sidebar-foreground))',
+					active: 'hsl(var(--sidebar-active))',
+					'active-foreground': 'hsl(var(--sidebar-active-foreground))',
+					hover: 'hsl(var(--sidebar-hover))',
 				},
 				hrms: {
-					blue: 'hsl(172,100%,34%)', // new primary for HRMS
+					blue: 'hsl(172,100%,34%)', // primary for HRMS
 					success: 'hsl(144,60%,40%)',
 					warning: 'hsl(4,90%,58%)',
 					light: 'hsl(0,0%,96%)',
@@ -118,4 +115,3 @@ export default {
 	},
 	plugins: [require("tailwindcss-animate")],
 }
-

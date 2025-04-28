@@ -15,11 +15,11 @@ const AppLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full bg-gray-50">
+      <div className="flex h-screen w-full bg-background text-foreground transition-colors duration-300">
         <AppSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <TopBar />
-          <main className="flex-1 overflow-auto p-4 sm:p-6">
+          <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background transition-colors duration-300">
             <Outlet />
           </main>
         </div>
