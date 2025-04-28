@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import api from '@/services/apiService';
+import { getFileUrl } from '@/lib/utils';
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -65,13 +66,22 @@ const SettingsPage = () => {
     confirmPassword: '',
   });
   
+  // Synchronize theme state with appPrefs.darkMode
   useEffect(() => {
+    // When appPrefs are loaded from the backend, update the theme
     if (appPrefs.darkMode) {
       setTheme('dark');
     } else {
       setTheme('light');
     }
   }, [appPrefs.darkMode, setTheme]);
+  
+  // Update appPrefs.darkMode when theme changes
+  useEffect(() => {
+    if (!isLoading) {
+      setAppPrefs(prev => ({ ...prev, darkMode: theme === 'dark' }));
+    }
+  }, [theme, isLoading]);
   
   useEffect(() => {
     const fetchSettings = async () => {
@@ -335,7 +345,7 @@ const SettingsPage = () => {
               <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 items-start">
                 <div className="flex flex-col items-center space-y-2">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={user?.avatar} alt={profile.name} />
+                    <AvatarImage src={getFileUrl(user?.avatar)} alt={profile.name} />
                     <AvatarFallback className="text-2xl">{profile.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-center">
@@ -672,26 +682,26 @@ const SettingsPage = () => {
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Theme</h3>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center space-x-2">
-                      {theme === 'dark' ? (
-                        <Moon className="w-4 h-4 text-muted-foreground" />
-                      ) : (
-                        <Sun className="w-4 h-4 text-muted-foreground" />
-                      )}
-                      <span>Dark mode</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Switch between light and dark theme
-                    </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="flex items-center space-x-2">
+                    {theme === 'dark' ? (
+                      <Moon className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <Sun className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span>Dark mode</span>
                   </div>
-                  <Switch 
-                    checked={theme === 'dark'}
-                    onCheckedChange={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                    className="transition-opacity"
-                  />
+                  <div className="text-sm text-muted-foreground">
+                    Switch between light and dark theme
+                  </div>
                 </div>
+                <Switch 
+                  checked={appPrefs.darkMode}
+                  onCheckedChange={() => handlePrefToggle('darkMode')}
+                  className="transition-opacity"
+                />
+              </div>
               </div>
               
               <Separator />

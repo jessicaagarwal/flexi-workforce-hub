@@ -62,7 +62,7 @@ const TopBar = () => {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-9 w-9 rounded-full">
             <Avatar className="h-9 w-9">
-              <AvatarImage src="/placeholder.svg" alt={user?.name || 'User'} />
+              <AvatarImage src={user?.avatar ? `${import.meta.env.VITE_API_URL?.replace('/api', '')}${user.avatar}` : "/placeholder.svg"} alt={user?.name || 'User'} />
               <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
           </Button>

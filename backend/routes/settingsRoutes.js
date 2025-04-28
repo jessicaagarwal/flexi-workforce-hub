@@ -12,6 +12,7 @@ const {
   updatePassword
 } = require('../controllers/settingsController');
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
 
@@ -37,7 +38,7 @@ router.route('/:id/preferences')
 
 // Avatar upload
 router.route('/:id/avatar')
-  .post(protect, uploadAvatar);
+  .post(protect, upload.single('avatar'), uploadAvatar);
 
 // Password update
 router.route('/:id/password')

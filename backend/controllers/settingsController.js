@@ -226,9 +226,30 @@ exports.uploadAvatar = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // In a real app, we would handle file upload and update the avatar URL
-    // For now, we'll just return a success message
-    res.json({ message: 'Avatar uploaded successfully' });
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    
+    // Create avatar URL
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    
+    // Update user with avatar URL
+    user.avatar = avatarUrl;
+    await user.save();
+    
+    // Find the employee associated with this user
+    const employee = await Employee.findOne({ createdBy: userId });
+    if (employee) {
+      // Update employee with avatar URL
+      employee.avatar = avatarUrl;
+      await employee.save();
+    }
+    
+    res.json({ 
+      message: 'Avatar uploaded successfully',
+      avatarUrl: avatarUrl
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
