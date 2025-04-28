@@ -13,24 +13,30 @@ export function ThemeProvider({
   storageKey = "vite-ui-theme",
 }) {
   const [theme, setTheme] = useState(() => {
+    // Check localStorage first
     const storedTheme = localStorage.getItem(storageKey);
     if (storedTheme) {
       return storedTheme;
     }
     
+    // Then check system preference
     if (window.matchMedia) {
       if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
         return "dark";
       }
     }
     
+    // Default fallback
     return defaultTheme;
   });
 
   useEffect(() => {
     const root = window.document.documentElement;
     
-    // Remove the old theme class with a transition
+    // Add transition class for smooth switching
+    root.classList.add('transition-colors', 'duration-300');
+    
+    // Remove the old theme class
     root.classList.remove(theme === "dark" ? "light" : "dark");
     
     // Add the new theme class

@@ -1,10 +1,11 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 96%;
+    --background: 0 0% 98%;
     --foreground: 220 20% 20%;
 
     --card: 0 0% 100%;
@@ -19,7 +20,7 @@
     --secondary-foreground: 220 20% 20%;
 
     --muted: 0 0% 96%;
-    --muted-foreground: 220 20% 20%;
+    --muted-foreground: 220 20% 60%;
 
     --accent: 0 0% 96%;
     --accent-foreground: 220 20% 20%;
@@ -27,42 +28,42 @@
     --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 85%;
-    --input: 220 20% 85%;
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
     --ring: 172 100% 34%;
     --radius: 1rem;
   }
 
   .dark {
-    --background: 220 20% 10%;
+    --background: 220 20% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 220 20% 13%;
+    --card: 220 20% 11%;
     --card-foreground: 0 0% 98%;
-    --popover: 220 20% 13%;
+    --popover: 220 20% 11%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 172 100% 34%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 220 20% 16%;
+    --secondary: 220 20% 14%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 220 20% 16%;
+    --muted: 220 20% 14%;
     --muted-foreground: 220 20% 70%;
 
-    --accent: 220 20% 16%;
+    --accent: 220 20% 14%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
+    --border: 220 20% 16%;
+    --input: 220 20% 16%;
     --ring: 172 100% 34%;
 
     /* Sidebar colors for dark mode */
-    --sidebar-background: 220 20% 8%;
+    --sidebar-background: 220 20% 6%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 172 100% 34%;
     --sidebar-primary-foreground: 0 0% 98%;
@@ -132,15 +133,15 @@
     @apply text-xs font-bold px-2.5 py-0.5 rounded-full;
   }
   .status-badge-success {
-    @apply status-badge bg-green-100 text-green-800;
+    @apply status-badge bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
   }
   .status-badge-warning {
-    @apply status-badge bg-yellow-100 text-yellow-800;
+    @apply status-badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400;
   }
   .status-badge-danger {
-    @apply status-badge bg-red-100 text-red-800;
+    @apply status-badge bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
   }
   .status-badge-info {
-    @apply status-badge bg-primary/20 text-primary-foreground;
+    @apply status-badge bg-primary/20 text-primary-foreground dark:bg-primary/30;
   }
 }
