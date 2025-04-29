@@ -92,17 +92,13 @@ exports.getNotificationPreferences = async (req, res) => {
 exports.getAppPreferences = async (req, res) => {
   try {
     const userId = req.params.id;
-    
     // Find the user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // Return app preferences
-    // In a real app, these would be stored in the user document
-    // For now, we'll return default values
-    res.json({
+    // Return app preferences from user document
+    res.json(user.appPreferences || {
       darkMode: false,
       systemLanguage: true,
       highContrast: false,
@@ -200,15 +196,17 @@ exports.updateNotificationPreferences = async (req, res) => {
 exports.updateAppPreferences = async (req, res) => {
   try {
     const userId = req.params.id;
-    
     // Find the user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // In a real app, we would update the app preferences in the user document
-    // For now, we'll just return a success message
+    // Update app preferences in user document
+    user.appPreferences = {
+      ...user.appPreferences,
+      ...req.body
+    };
+    await user.save();
     res.json({ message: 'App preferences updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

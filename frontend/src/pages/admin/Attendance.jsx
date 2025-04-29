@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Calendar, Download, Loader2 } from 'lucide-react';
 import api from '@/services/apiService';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const AdminAttendance = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,8 +40,8 @@ const AdminAttendance = () => {
         // Format the data for display
         const formattedData = response.data.map(record => {
           // Format date
-          const date = new Date(record.date);
-          const formattedDate = date.toLocaleDateString('en-US', {
+          const dateObj = new Date(record.date);
+          const formattedDate = dateObj.toLocaleDateString('en-US', {
             month: 'short',
             day: '2-digit',
             year: 'numeric'
@@ -48,23 +49,45 @@ const AdminAttendance = () => {
           
           // Format times
           const formatTime = (timeString) => {
-            if (!timeString) return '--:--';
+            if (!timeString) return '';
             const date = new Date(timeString);
             return date.toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
-              hour12: true
+              hour12: false
             });
           };
           
+          // Attendance status logic
+          let status = 'Absent';
+          if (!record.checkIn) {
+            status = 'Absent';
+          } else {
+            const clockIn = new Date(record.checkIn);
+            const inHour = clockIn.getHours();
+            const inMin = clockIn.getMinutes();
+            // Present: clock-in 9:00-9:30
+            if (inHour === 9 && inMin >= 0 && inMin <= 30) {
+              status = 'Present';
+            }
+            // Late: clock-in 9:31-11:59
+            else if ((inHour === 9 && inMin > 30) || (inHour > 9 && inHour < 12)) {
+              status = 'Late';
+            } else {
+              status = 'Absent';
+            }
+          }
+          
+          // Add null checks for employee
           return {
             id: record._id,
-            employeeId: record.employee._id,
-            name: record.employee.name,
+            employeeId: record.employee && record.employee._id ? record.employee._id : 'N/A',
+            name: record.employee && record.employee.name ? record.employee.name : 'Unknown',
             date: formattedDate,
-            clockIn: formatTime(record.checkIn),
-            clockOut: formatTime(record.checkOut),
-            status: record.status || 'Present'
+            rawDate: format(dateObj, 'yyyy-MM-dd'),
+            clockIn: formatTime(record.checkIn) || '--:--',
+            clockOut: formatTime(record.checkOut) || '--:--',
+            status
           };
         });
         
@@ -110,7 +133,9 @@ const AdminAttendance = () => {
     
     const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    const matchesDate = !dateFilter || record.rawDate === dateFilter;
+    
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   return (
@@ -187,10 +212,13 @@ const AdminAttendance = () => {
             </Select>
           </div>
           
-          <Button variant="outline" className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2" />
-            Select Date
-          </Button>
+          <input
+            type="date"
+            className="border rounded px-2 py-1 ml-2"
+            value={dateFilter}
+            onChange={e => setDateFilter(e.target.value)}
+            style={{ height: '36px' }}
+          />
           
           <Button variant="outline" className="flex items-center">
             <Download className="h-4 w-4 mr-2" />

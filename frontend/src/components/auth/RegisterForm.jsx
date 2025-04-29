@@ -27,6 +27,7 @@ const registerSchema = z.object({
 
 const RegisterForm = () => {
   const { register, isLoading } = useAuth();
+  const [role, setRole] = React.useState('employee');
   const form = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -39,7 +40,7 @@ const RegisterForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      await register(data.name, data.email, data.password);
+      await register(data.name, data.email, data.password, role);
     } catch (error) {
       console.error('Registration error:', error);
     }
@@ -127,6 +128,18 @@ const RegisterForm = () => {
               </FormItem>
             )}
           />
+          <div>
+            <label className="block text-sm font-medium mb-1">Register as</label>
+            <select
+              className="border rounded px-3 py-2 w-full"
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              disabled={isLoading}
+            >
+              <option value="employee">Employee</option>
+              <option value="hr">HR</option>
+            </select>
+          </div>
           <Button 
             type="submit" 
             className="w-full bg-hrms-blue hover:bg-blue-700"

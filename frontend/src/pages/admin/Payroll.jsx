@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DollarSign, FileText, Download, Plus, Search, Filter, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 const AdminPayroll = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,26 +62,29 @@ const AdminPayroll = () => {
   
   // State for payroll generation
   const [isGeneratingPayroll, setIsGeneratingPayroll] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   
   // Fetch current payroll data
   useEffect(() => {
     const fetchPayrollData = async () => {
       try {
         setIsLoadingPayroll(true);
-        const response = await api.get('/payrolls/current');
+        // Fetch all payrolls for admin view
+        const response = await api.get('/payrolls');
         
         // Format the data
         const formattedPayroll = response.data.map(payroll => ({
           id: payroll._id,
           employeeId: payroll.employee?.employeeId || 'N/A',
           name: payroll.employee?.name || 'Unknown',
-          designation: payroll.employee?.designation || 'N/A',
-          salary: payroll.netSalary || 0,
-          payDate: new Date(payroll.payDate).toLocaleDateString('en-US', {
+          designation: payroll.employee?.designation || payroll.employee?.position || 'N/A',
+          salary: payroll.netPay || 0,
+          payDate: payroll.paymentDate ? new Date(payroll.paymentDate).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
-          }),
+          }) : 'N/A',
           status: payroll.status
         }));
         
@@ -136,31 +140,29 @@ const AdminPayroll = () => {
     fetchPayrollHistory();
   }, []);
   
-  // Fetch payroll stats
+  // Calculate payroll stats from filtered payroll data
   useEffect(() => {
-    const fetchPayrollStats = async () => {
-      try {
-        const response = await api.get('/payrolls/stats');
-        
-        setPayrollStats({
-          totalPayroll: response.data.totalPayroll || 0,
-          averageSalary: response.data.averageSalary || 0,
-          employeeCount: response.data.employeeCount || 0,
-          nextPayDate: new Date(response.data.nextPayDate).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }),
-          payrollStatus: response.data.payrollStatus || 'Pending'
-        });
-      } catch (err) {
-        console.error('Error fetching payroll stats:', err);
-        // Don't show error toast for stats to avoid multiple error messages
-      }
-    };
-    
-    fetchPayrollStats();
-  }, []);
+    if (!isLoadingPayroll && payrollData.length > 0) {
+      const totalPayroll = payrollData.reduce((sum, emp) => sum + (emp.salary || 0), 0);
+      const averageSalary = totalPayroll / payrollData.length;
+      // Find the next pay date (latest pay date in payroll data)
+      const payDates = payrollData.map(emp => new Date(emp.payDate)).filter(d => !isNaN(d));
+      const nextPayDate = payDates.length > 0 ? new Date(Math.max(...payDates)).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }) : '';
+      setPayrollStats(prev => ({
+        ...prev,
+        totalPayroll,
+        averageSalary,
+        employeeCount: payrollData.length,
+        nextPayDate
+      }));
+    } else if (!isLoadingPayroll) {
+      setPayrollStats(prev => ({ ...prev, totalPayroll: 0, averageSalary: 0, employeeCount: 0, nextPayDate: '' }));
+    }
+  }, [payrollData, isLoadingPayroll]);
   
   // Fetch payroll settings
   useEffect(() => {
@@ -187,17 +189,14 @@ const AdminPayroll = () => {
   
   // Handle payroll generation
   const handleGeneratePayroll = async () => {
-    if (window.confirm('Are you sure you want to generate payroll for the current period?')) {
+    if (window.confirm(`Generate payroll for ${format(new Date(selectedYear, selectedMonth - 1), 'MMMM yyyy')}?`)) {
       try {
         setIsGeneratingPayroll(true);
-        await api.post('/payrolls/generate');
-        
+        await api.post('/payrolls', { month: selectedMonth, year: selectedYear });
         toast.success('Payroll generated successfully');
-        
         // Refresh payroll data
-        const response = await api.get('/payrolls/current');
+        const response = await api.get('/payrolls');
         setPayrollData(response.data);
-        
         // Refresh payroll stats
         const statsResponse = await api.get('/payrolls/stats');
         setPayrollStats({
@@ -368,6 +367,27 @@ const AdminPayroll = () => {
                 <Filter className="mr-2 h-4 w-4" />
                 Filter
               </Button>
+              <Select value={selectedMonth} onValueChange={v => setSelectedMonth(Number(v))}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[...Array(12)].map((_, i) => (
+                    <SelectItem key={i+1} value={i+1}>{format(new Date(2000, i), 'MMMM')}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedYear} onValueChange={v => setSelectedYear(Number(v))}>
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[...Array(5)].map((_, i) => {
+                    const year = new Date().getFullYear() - 2 + i;
+                    return <SelectItem key={year} value={year}>{year}</SelectItem>;
+                  })}
+                </SelectContent>
+              </Select>
               <Button 
                 onClick={handleGeneratePayroll}
                 disabled={isGeneratingPayroll}

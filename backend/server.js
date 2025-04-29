@@ -17,6 +17,7 @@ const profileRoutes = require('./routes/profileRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -330,12 +330,13 @@ const AdminDocuments = () => {
   
   // Filter documents based on search and category
   const filteredDocuments = documents.filter(doc => {
+    const name = doc.name || '';
+    const uploadedBy = doc.uploadedBy || '';
+    const category = doc.category || '';
     const matchesSearch = 
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = categoryFilter === 'all' || doc.category === categoryFilter;
-    
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      uploadedBy.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 

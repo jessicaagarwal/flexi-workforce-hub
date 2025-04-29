@@ -28,6 +28,7 @@ const employeeSchema = new mongoose.Schema({
   panCard: { type: String },
   taxInformation: { type: String },
   isActive: { type: Boolean, default: true },
+  avatar: { type: String, default: '' },
   employmentHistory: [
     {
       role: String,
@@ -39,7 +40,15 @@ const employeeSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
+  },
+  employeeId: { type: String, unique: true, required: true },
+  role: { type: String, default: 'employee' },
+  status: { type: String, default: 'Active' },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Employee', employeeSchema);

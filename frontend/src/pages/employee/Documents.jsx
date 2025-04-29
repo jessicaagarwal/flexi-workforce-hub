@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Download, FileText, Upload, Eye, FileUp, Loader2, AlertCircle } from 'lucide-react';
+import { Download, FileText, Upload, Eye, FileUp, Loader2, AlertCircle, Trash } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/services/apiService';
 import { toast } from 'sonner';
@@ -33,6 +33,9 @@ const Documents = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  
+  // Add state for category
+  const [category, setCategory] = useState('personal');
   
   // Helper function to format file size
   const formatFileSize = (bytes) => {
@@ -179,6 +182,9 @@ const Documents = () => {
         formData.append('documents', file);
       });
       
+      // In handleUpload, add category to formData
+      formData.append('category', category);
+      
       const response = await api.post('/documents/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -269,6 +275,27 @@ const Documents = () => {
     }
   };
 
+  // Add delete handler
+  const handleDeleteDocument = async (id, category) => {
+    if (window.confirm('Are you sure you want to delete this document?')) {
+      try {
+        await api.delete(`/documents/${id}`);
+        toast.success('Document deleted successfully');
+        // Remove from relevant state
+        if (category === 'personal') {
+          setPersonalDocuments(prev => prev.filter(doc => doc.id !== id));
+        } else if (category === 'payroll') {
+          setPayrollDocuments(prev => prev.filter(doc => doc.id !== id));
+        } else if (category === 'company') {
+          setCompanyDocuments(prev => prev.filter(doc => doc.id !== id));
+        }
+      } catch (err) {
+        console.error('Error deleting document:', err);
+        toast.error('Failed to delete document');
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -340,6 +367,13 @@ const Documents = () => {
                             >
                               <Download className="h-4 w-4" />
                             </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDeleteDocument(doc.id, 'personal')}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -404,6 +438,13 @@ const Documents = () => {
                               onClick={() => handleDownloadDocument(doc.id, doc.name)}
                             >
                               <Download className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDeleteDocument(doc.id, 'payroll')}
+                            >
+                              <Trash className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -470,6 +511,13 @@ const Documents = () => {
                             >
                               <Download className="h-4 w-4" />
                             </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDeleteDocument(doc.id, 'company')}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -488,6 +536,19 @@ const Documents = () => {
               <CardDescription>Upload personal documents for HR review</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Document Category</label>
+                <select
+                  className="border rounded px-3 py-2 w-full"
+                  value={category}
+                  onChange={e => setCategory(e.target.value)}
+                  disabled={isUploading}
+                >
+                  <option value="personal">Personal</option>
+                  <option value="payroll">Payroll</option>
+                  <option value="company">Company</option>
+                </select>
+              </div>
               <div 
                 className="border-2 border-dashed rounded-lg p-8 text-center"
                 onDrop={handleFileDrop}

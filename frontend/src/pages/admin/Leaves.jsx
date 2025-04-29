@@ -52,7 +52,7 @@ const LeaveRequests = () => {
           id: leave._id,
           employee: leave.employee?.name || 'Unknown',
           employeeId: leave.employee?._id || '',
-          type: leave.leaveType || 'Unknown',
+          type: leave.type || 'Unknown',
           startDate: new Date(leave.startDate).toISOString().split('T')[0],
           endDate: new Date(leave.endDate).toISOString().split('T')[0],
           days: leave.days || 0,
@@ -92,8 +92,7 @@ const LeaveRequests = () => {
   
   const handleApprove = async () => {
     try {
-      await api.put(`/leaves/${selectedRequest.id}/approve`);
-      
+      await api.put(`/leaves/${selectedRequest.id}/approve`, { status: 'Approved' });
       // Update the local state
       setLeaveRequests(prev => 
         prev.map(req => 
@@ -102,7 +101,6 @@ const LeaveRequests = () => {
             : req
         )
       );
-      
       setDialogOpen(false);
       toast.success(`Leave request for ${selectedRequest.employee} has been approved`);
     } catch (err) {
@@ -113,8 +111,7 @@ const LeaveRequests = () => {
   
   const handleReject = async () => {
     try {
-      await api.put(`/leaves/${selectedRequest.id}/reject`);
-      
+      await api.put(`/leaves/${selectedRequest.id}/reject`, { status: 'Rejected' });
       // Update the local state
       setLeaveRequests(prev => 
         prev.map(req => 
@@ -123,7 +120,6 @@ const LeaveRequests = () => {
             : req
         )
       );
-      
       setDialogOpen(false);
       toast.success(`Leave request for ${selectedRequest.employee} has been rejected`);
     } catch (err) {

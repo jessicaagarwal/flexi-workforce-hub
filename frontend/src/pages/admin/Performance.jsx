@@ -27,6 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Plus, Award, Star, ChevronRight, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const AdminPerformance = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,6 +59,16 @@ const AdminPerformance = () => {
   
   // State for creating a new review
   const [isCreatingReview, setIsCreatingReview] = useState(false);
+  
+  // State for Create Review modal
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [reviewForm, setReviewForm] = useState({ employee: '', rating: 5, feedback: '', reviewDate: new Date().toISOString().slice(0,10) });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Add state for all employees and all reviews
+  const [allEmployees, setAllEmployees] = useState([]);
+  const [allReviews, setAllReviews] = useState([]);
   
   // Fetch performance data
   useEffect(() => {
@@ -195,6 +208,34 @@ const AdminPerformance = () => {
     fetchPerformanceStats();
   }, []);
   
+  // Fetch employees for dropdown
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await api.get('/employees');
+        setEmployees(res.data);
+      } catch (err) {
+        toast.error('Failed to fetch employees');
+      }
+    };
+    fetchEmployees();
+  }, []);
+  
+  // Fetch all employees and all reviews
+  useEffect(() => {
+    const fetchAllEmployeesAndReviews = async () => {
+      try {
+        const empRes = await api.get('/employees');
+        setAllEmployees(empRes.data);
+        const revRes = await api.get('/performance');
+        setAllReviews(revRes.data);
+      } catch (err) {
+        toast.error('Failed to fetch employees or reviews');
+      }
+    };
+    fetchAllEmployeesAndReviews();
+  }, []);
+  
   // Handle start review
   const handleStartReview = async (id) => {
     try {
@@ -212,18 +253,8 @@ const AdminPerformance = () => {
   };
   
   // Handle create new review
-  const handleCreateReview = async () => {
-    setIsCreatingReview(true);
-    
-    try {
-      // In a real app, this would open a modal or navigate to a form
-      toast.info('This would open a form to create a new review');
-    } catch (err) {
-      console.error('Error creating review:', err);
-      toast.error('Failed to create review');
-    } finally {
-      setIsCreatingReview(false);
-    }
+  const handleCreateReview = () => {
+    setShowReviewModal(true);
   };
   
   // Handle create new template
@@ -237,14 +268,107 @@ const AdminPerformance = () => {
     }
   };
   
+  // Handle close review modal
+  const handleCloseReviewModal = () => {
+    setShowReviewModal(false);
+    setReviewForm({ employee: '', rating: 5, feedback: '', reviewDate: new Date().toISOString().slice(0,10) });
+  };
+  
+  // Handle review form change
+  const handleReviewFormChange = (e) => {
+    const { name, value } = e.target;
+    setReviewForm((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  // Handle review select change
+  const handleReviewSelectChange = (value) => {
+    setReviewForm((prev) => ({ ...prev, employee: value }));
+  };
+  
+  // Handle review rating change
+  const handleReviewRatingChange = (value) => {
+    setReviewForm((prev) => ({ ...prev, rating: Number(value) }));
+  };
+  
+  // Helper to get review period from date
+  function getReviewPeriod(dateStr) {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    let quarter = 'Q1';
+    if (month >= 3 && month <= 5) quarter = 'Q2';
+    else if (month >= 6 && month <= 8) quarter = 'Q3';
+    else if (month >= 9 && month <= 11) quarter = 'Q4';
+    return `${quarter} ${year}`;
+  }
+  
+  // Handle submit review
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await api.post('/performance', {
+        employee: reviewForm.employee,
+        overallRating: reviewForm.rating,
+        feedback: reviewForm.feedback,
+        reviewDate: reviewForm.reviewDate,
+        reviewPeriod: getReviewPeriod(reviewForm.reviewDate)
+      });
+      toast.success('Review created successfully');
+      setShowReviewModal(false);
+      setReviewForm({ employee: '', rating: 5, feedback: '', reviewDate: new Date().toISOString().slice(0,10) });
+      // Refresh performance data
+      const response = await api.get('/performance');
+      const formattedData = response.data.map(performance => ({
+        id: performance._id,
+        employeeId: performance.employee?.employeeId || 'N/A',
+        name: performance.employee?.name || 'Unknown',
+        department: performance.employee?.department || 'N/A',
+        rating: performance.rating || 0,
+        lastReview: performance.lastReviewDate ? new Date(performance.lastReviewDate).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+        nextReview: performance.nextReviewDate ? new Date(performance.nextReviewDate).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+        status: performance.status || 'Not Rated'
+      }));
+      setPerformanceData(formattedData);
+    } catch (err) {
+      toast.error('Failed to create review');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Helper to get latest review for an employee
+  function getLatestReviewForEmployee(employeeId) {
+    const reviews = allReviews.filter(r => r.employee && (r.employee._id === employeeId || r.employee === employeeId));
+    if (reviews.length === 0) return null;
+    // Sort by reviewDate descending
+    reviews.sort((a, b) => new Date(b.reviewDate) - new Date(a.reviewDate));
+    return reviews[0];
+  }
+  
+  // Build table data: all employees with their latest review
+  const employeesWithLatestReview = allEmployees.map(emp => {
+    const review = getLatestReviewForEmployee(emp._id);
+    return {
+      employeeId: emp.employeeId,
+      name: emp.name,
+      department: emp.department,
+      rating: review ? review.overallRating : 0,
+      lastReview: review ? new Date(review.reviewDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+      nextReview: review ? (review.nextReviewDate ? new Date(review.nextReviewDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A') : 'N/A',
+      status: review ? 'Rated' : 'Not Rated',
+      id: emp._id
+    };
+  });
+  
   // Filter performance data based on search and department
-  const filteredPerformance = performanceData.filter(employee => {
+  const filteredEmployeesWithLatestReview = employeesWithLatestReview.filter(employee => {
     const matchesSearch = 
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesDepartment = departmentFilter === 'all' || employee.department === departmentFilter;
-    
     return matchesSearch && matchesDepartment;
   });
 
@@ -366,7 +490,7 @@ const AdminPerformance = () => {
                 <div className="flex justify-center items-center h-64 text-red-500">
                   {performanceError}
                 </div>
-              ) : filteredPerformance.length === 0 ? (
+              ) : filteredEmployeesWithLatestReview.length === 0 ? (
                 <div className="flex justify-center items-center h-64 text-muted-foreground">
                   No performance data found
                 </div>
@@ -385,7 +509,7 @@ const AdminPerformance = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredPerformance.map((employee) => (
+                    {filteredEmployeesWithLatestReview.map((employee) => (
                       <TableRow key={employee.id}>
                         <TableCell>{employee.employeeId}</TableCell>
                         <TableCell className="font-medium">{employee.name}</TableCell>
@@ -400,11 +524,9 @@ const AdminPerformance = () => {
                         <TableCell>{employee.nextReview}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            employee.status === 'Excellent' 
+                            employee.status === 'Rated' 
                               ? 'bg-green-100 text-green-800' 
-                              : employee.status === 'On Track'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-yellow-100 text-yellow-800'
+                              : 'bg-yellow-100 text-yellow-800'
                           }`}>
                             {employee.status}
                           </span>
@@ -555,6 +677,57 @@ const AdminPerformance = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Create Review Modal */}
+      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Performance Review</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmitReview} className="space-y-4">
+            <div>
+              <Label htmlFor="employee">Employee</Label>
+              <Select value={reviewForm.employee} onValueChange={handleReviewSelectChange} required>
+                <SelectTrigger id="employee">
+                  <SelectValue placeholder="Select employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map(emp => (
+                    <SelectItem key={emp._id} value={emp._id}>{emp.name} ({emp.employeeId})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="rating">Rating</Label>
+              <Select value={String(reviewForm.rating)} onValueChange={handleReviewRatingChange} required>
+                <SelectTrigger id="rating">
+                  <SelectValue placeholder="Select rating" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5,4,3,2,1].map(r => (
+                    <SelectItem key={r} value={String(r)}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="reviewDate">Review Date</Label>
+              <Input type="date" id="reviewDate" name="reviewDate" value={reviewForm.reviewDate} onChange={handleReviewFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="feedback">Feedback</Label>
+              <Textarea id="feedback" name="feedback" value={reviewForm.feedback} onChange={handleReviewFormChange} placeholder="Enter feedback..." required />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : 'Submit Review'}</Button>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" onClick={handleCloseReviewModal}>Cancel</Button>
+              </DialogClose>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

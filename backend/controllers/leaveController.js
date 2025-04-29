@@ -1,4 +1,5 @@
 const Leave = require('../models/Leave');
+const Employee = require('../models/Employee');
 
 // Get leave balance
 exports.getLeaveBalance = async (req, res) => {
@@ -24,8 +25,24 @@ exports.getLeaveBalance = async (req, res) => {
 // Apply for leave
 exports.applyLeave = async (req, res) => {
   try {
+    // Find the employee document for the current user
+    const employee = await Employee.findOne({ user: req.user._id });
+    if (!employee) {
+      return res.status(400).json({ message: 'Employee profile not found for this user.' });
+    }
+
+    // Map leaveType from frontend to type for backend schema
+    const typeMap = {
+      annual: 'Casual',
+      sick: 'Sick',
+      personal: 'Paid'
+    };
+    const type = typeMap[req.body.leaveType] || 'Other';
+
     const leave = await Leave.create({
       ...req.body,
+      type, // use mapped type
+      employee: employee._id, // Set the employee reference
       requestedBy: req.user._id
     });
     res.status(201).json(leave);
@@ -60,7 +77,12 @@ exports.getMyLeaves = async (req, res) => {
 // Get employee leave history
 exports.getEmployeeLeaves = async (req, res) => {
   try {
-    const leaves = await Leave.find({ employee: req.params.id });
+    const leaves = await Leave.find({
+      $or: [
+        { employee: req.params.id },
+        { requestedBy: req.params.id }
+      ]
+    });
     res.json(leaves);
   } catch (error) {
     res.status(500).json({ message: error.message });

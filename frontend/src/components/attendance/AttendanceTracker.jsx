@@ -16,6 +16,7 @@ const AttendanceTracker = () => {
   const [attendanceHistory, setAttendanceHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [employeeId, setEmployeeId] = useState(null);
   
   // Update current time every minute
   useEffect(() => {
@@ -100,18 +101,31 @@ const AttendanceTracker = () => {
     fetchAttendanceHistory();
   }, [user, isCheckedIn]); // Re-fetch when check-in status changes
   
+  // Fetch employee profile on mount
+  useEffect(() => {
+    const fetchEmployeeProfile = async () => {
+      if (!user?._id) return;
+      try {
+        const res = await api.get(`/employees/user/${user._id}`);
+        setEmployeeId(res.data._id);
+      } catch (err) {
+        console.error('Error fetching employee profile:', err);
+      }
+    };
+    fetchEmployeeProfile();
+  }, [user]);
+  
   const handleCheckIn = async () => {
-    if (!user?._id) {
+    if (!employeeId) {
       toast({
         title: "Error",
-        description: "User information not available",
+        description: "Employee profile not found",
         variant: "destructive"
       });
       return;
     }
-    
     try {
-      const response = await api.post('/attendance/checkin', { employeeId: user._id });
+      const response = await api.post('/attendance/checkin', { employeeId });
       
       const now = new Date();
       setIsCheckedIn(true);
@@ -132,17 +146,17 @@ const AttendanceTracker = () => {
   };
   
   const handleCheckOut = async () => {
-    if (!user?._id) {
+    if (!employeeId) {
       toast({
         title: "Error",
-        description: "User information not available",
+        description: "Employee profile not found",
         variant: "destructive"
       });
       return;
     }
     
     try {
-      const response = await api.post('/attendance/checkout', { employeeId: user._id });
+      const response = await api.post('/attendance/checkout', { employeeId });
       
       const now = new Date();
       

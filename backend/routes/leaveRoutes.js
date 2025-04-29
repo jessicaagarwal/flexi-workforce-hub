@@ -23,5 +23,7 @@ router.route('/employee/:id').get(protect, getEmployeeLeaves);
 
 // Update leave status
 router.route('/:id').put(protect, updateLeaveStatus);
+router.put('/:id/approve', protect, updateLeaveStatus);
+router.put('/:id/reject', protect, updateLeaveStatus);
 
 module.exports = router;

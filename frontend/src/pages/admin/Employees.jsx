@@ -20,6 +20,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, UserPlus, Edit, Trash, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
 
 const EmployeesPage = () => {
   const [employees, setEmployees] = useState([]);
@@ -29,6 +38,14 @@ const EmployeesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  
+  const [addForm, setAddForm] = useState({ name: '', email: '', password: '', department: '', status: 'Active', role: 'employee' });
+  const [isAdding, setIsAdding] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ id: '', name: '', email: '', department: '', status: 'Active', role: 'employee' });
+  const [isEditing, setIsEditing] = useState(false);
   
   // Fetch employees when component mounts
   useEffect(() => {
@@ -76,6 +93,59 @@ const EmployeesPage = () => {
     return matchesSearch && matchesDepartment && matchesStatus;
   });
   
+  const handleAddEmployee = async (e) => {
+    e.preventDefault();
+    setIsAdding(true);
+    try {
+      await api.post('/employees/create-with-credentials', addForm);
+      toast.success('Employee added successfully');
+      setDialogOpen(false);
+      setAddForm({ name: '', email: '', password: '', department: '', status: 'Active', role: 'employee' });
+      // Refresh list
+      const response = await api.get('/employees');
+      setEmployees(response.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add employee');
+    } finally {
+      setIsAdding(false);
+    }
+  };
+  
+  const handleEditClick = (employee) => {
+    setEditForm({
+      id: employee._id || employee.id,
+      name: employee.name || '',
+      email: employee.email || '',
+      department: employee.department || '',
+      status: employee.status || 'Active',
+      role: employee.role || 'employee',
+    });
+    setEditDialogOpen(true);
+  };
+  
+  const handleEditEmployee = async (e) => {
+    e.preventDefault();
+    setIsEditing(true);
+    try {
+      await api.put(`/employees/${editForm.id}`, {
+        name: editForm.name,
+        email: editForm.email,
+        department: editForm.department,
+        status: editForm.status,
+        role: editForm.role,
+      });
+      toast.success('Employee updated successfully');
+      setEditDialogOpen(false);
+      // Refresh list
+      const response = await api.get('/employees');
+      setEmployees(response.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update employee');
+    } finally {
+      setIsEditing(false);
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -85,10 +155,81 @@ const EmployeesPage = () => {
             Manage your company personnel and their information.
           </p>
         </div>
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Employee
-        </Button>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Employee
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Employee</DialogTitle>
+              <DialogDescription>
+                Fill in the details to add a new employee.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleAddEmployee} className="space-y-4">
+              <Input
+                placeholder="Full Name"
+                value={addForm.name}
+                onChange={e => setAddForm(f => ({ ...f, name: e.target.value }))}
+                required
+              />
+              <Input
+                placeholder="Email"
+                type="email"
+                value={addForm.email}
+                onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
+                required
+              />
+              <Input
+                placeholder="Password"
+                type="password"
+                value={addForm.password}
+                onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))}
+                required
+              />
+              <Input
+                placeholder="Department"
+                value={addForm.department}
+                onChange={e => setAddForm(f => ({ ...f, department: e.target.value }))}
+                list="department-options"
+              />
+              <datalist id="department-options">
+                <option value="Engineering" />
+                <option value="Design" />
+                <option value="Marketing" />
+                <option value="HR" />
+                <option value="Finance" />
+                <option value="Sales" />
+              </datalist>
+              <Select value={addForm.status} onValueChange={v => setAddForm(f => ({ ...f, status: v }))}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="On Leave">On Leave</SelectItem>
+                  <SelectItem value="Terminated">Terminated</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={addForm.role} onValueChange={v => setAddForm(f => ({ ...f, role: v }))}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="employee">Employee</SelectItem>
+                  <SelectItem value="hr">HR</SelectItem>
+                </SelectContent>
+              </Select>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={isAdding}>Cancel</Button>
+                <Button type="submit" disabled={isAdding}>{isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
       
       <div className="flex flex-col sm:flex-row gap-4">
@@ -115,6 +256,8 @@ const EmployeesPage = () => {
             <SelectItem value="Design">Design</SelectItem>
             <SelectItem value="Marketing">Marketing</SelectItem>
             <SelectItem value="HR">HR</SelectItem>
+            <SelectItem value="Finance">Finance</SelectItem>
+            <SelectItem value="Sales">Sales</SelectItem>
           </SelectContent>
         </Select>
         
@@ -175,7 +318,7 @@ const EmployeesPage = () => {
                       </span>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditClick(employee)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
@@ -199,6 +342,69 @@ const EmployeesPage = () => {
           </Table>
         )}
       </div>
+      
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Employee</DialogTitle>
+            <DialogDescription>
+              Update the details for this employee.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditEmployee} className="space-y-4">
+            <Input
+              placeholder="Full Name"
+              value={editForm.name}
+              onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+              required
+            />
+            <Input
+              placeholder="Email"
+              type="email"
+              value={editForm.email}
+              onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+              required
+            />
+            <Input
+              placeholder="Department"
+              value={editForm.department}
+              onChange={e => setEditForm(f => ({ ...f, department: e.target.value }))}
+              list="department-options"
+            />
+            <datalist id="department-options">
+              <option value="Engineering" />
+              <option value="Design" />
+              <option value="Marketing" />
+              <option value="HR" />
+              <option value="Finance" />
+              <option value="Sales" />
+            </datalist>
+            <Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="On Leave">On Leave</SelectItem>
+                <SelectItem value="Terminated">Terminated</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={editForm.role} onValueChange={v => setEditForm(f => ({ ...f, role: v }))}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="employee">Employee</SelectItem>
+                <SelectItem value="hr">HR</SelectItem>
+              </SelectContent>
+            </Select>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)} disabled={isEditing}>Cancel</Button>
+              <Button type="submit" disabled={isEditing}>{isEditing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

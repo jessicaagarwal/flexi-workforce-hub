@@ -132,6 +132,7 @@ const LeaveManagement = () => {
       try {
         setHistoryLoading(true);
         const response = await api.get(`/leaves/employee/${user._id}`);
+        console.log('Leave history response:', response.data);
         
         // Transform the data for display
         const historyData = response.data.map(leave => {
@@ -141,7 +142,7 @@ const LeaveManagement = () => {
           
           return {
             id: leave._id,
-            type: leave.leaveType,
+            type: leave.type,
             startDate: format(startDate, 'yyyy-MM-dd'),
             endDate: format(endDate, 'yyyy-MM-dd'),
             status: leave.status,
@@ -176,7 +177,7 @@ const LeaveManagement = () => {
       
       // Prepare leave data
       const leaveData = {
-        employee: user._id,  // Changed from employeeId to employee to match backend model
+        employee: user._id,
         leaveType: data.leaveType,
         startDate: data.startDate,
         endDate: data.endDate,
@@ -185,15 +186,17 @@ const LeaveManagement = () => {
       };
       
       // Submit leave application
-      await api.post('/leaves', leaveData);
-      
-      toast.success("Leave application submitted successfully!");
-      setShowForm(false);
-      form.reset();
-      
-      // Refresh leave history and balance
-      fetchLeaveHistory();
-      fetchLeaveBalance();
+      const response = await api.post('/leaves', leaveData);
+      if (response.status === 201) {
+        toast.success("Leave application submitted successfully!");
+        setShowForm(false);
+        form.reset();
+        // Refresh leave history and balance
+        fetchLeaveHistory();
+        fetchLeaveBalance();
+      } else {
+        toast.error('Failed to submit leave application');
+      }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to submit leave application';
       toast.error(errorMessage);

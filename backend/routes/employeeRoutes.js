@@ -5,7 +5,10 @@ const {
   getEmployeeById, 
   updateEmployee, 
   deleteEmployee,
-  getEmployeeByUserId
+  getEmployeeByUserId,
+  getAllEmployees,
+  createEmployee,
+  createEmployeeWithCredentials
 } = require('../controllers/employeeController');
 const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
@@ -13,5 +16,6 @@ const router = express.Router();
 router.route('/').get(protect, getEmployees).post(protect, addEmployee);
 router.route('/user/:userId').get(protect, getEmployeeByUserId);
 router.route('/:id').get(protect, getEmployeeById).put(protect, updateEmployee).delete(protect, deleteEmployee);
+router.post('/create-with-credentials', protect, createEmployeeWithCredentials);
 
 module.exports = router;

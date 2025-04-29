@@ -4,7 +4,7 @@ const documentSchema = new mongoose.Schema({
   employee: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Employee',
-    required: true
+    required: false
   },
   title: { type: String, required: true },
   fileUrl: { type: String, required: true },

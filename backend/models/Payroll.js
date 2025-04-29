@@ -49,6 +49,14 @@ const payrollSchema = new mongoose.Schema({
   },
   payslipUrl: { 
     type: String 
+  },
+  month: {
+    type: Number,
+    required: true
+  },
+  year: {
+    type: Number,
+    required: true
   }
 }, { timestamps: true });
 

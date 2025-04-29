@@ -6,6 +6,39 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   role: { type: String, enum: ['admin', 'hr', 'employee'], default: 'employee' },
   password: { type: String, required: true },
+  avatar: { type: String, default: '' },
+  // Personal info
+  phone: { type: String },
+  address: { type: String },
+  dateOfBirth: { type: Date },
+  gender: { type: String },
+  emergencyContact: { type: String },
+  emergencyPhone: { type: String },
+  // Professional info
+  department: { type: String },
+  position: { type: String },
+  joinDate: { type: Date },
+  manager: { type: String },
+  workLocation: { type: String },
+  workEmail: { type: String },
+  workPhone: { type: String },
+  education: { type: String },
+  skills: { type: String },
+  // Bank info
+  accountName: { type: String },
+  accountNumber: { type: String },
+  bankName: { type: String },
+  branch: { type: String },
+  ifscCode: { type: String },
+  panCard: { type: String },
+  salary: { type: String },
+  taxInformation: { type: String },
+  appPreferences: {
+    darkMode: { type: Boolean, default: false },
+    systemLanguage: { type: Boolean, default: true },
+    highContrast: { type: Boolean, default: false },
+    reducedMotion: { type: Boolean, default: false }
+  }
 }, { timestamps: true });
 
 // Password Hashing

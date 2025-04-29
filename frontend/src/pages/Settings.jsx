@@ -66,22 +66,40 @@ const SettingsPage = () => {
     confirmPassword: '',
   });
   
-  // Synchronize theme state with appPrefs.darkMode
+  // Only set the theme from preferences on initial load
+  const didSetThemeFromPrefs = useRef(false);
   useEffect(() => {
-    // When appPrefs are loaded from the backend, update the theme
-    if (appPrefs.darkMode) {
-      setTheme('dark');
-    } else {
-      setTheme('light');
+    if (!didSetThemeFromPrefs.current && !isLoading) {
+      setTheme(appPrefs.darkMode ? 'dark' : 'light');
+      didSetThemeFromPrefs.current = true;
     }
-  }, [appPrefs.darkMode, setTheme]);
+    // eslint-disable-next-line
+  }, [appPrefs.darkMode, isLoading, setTheme]);
   
-  // Update appPrefs.darkMode when theme changes
   useEffect(() => {
-    if (!isLoading) {
-      setAppPrefs(prev => ({ ...prev, darkMode: theme === 'dark' }));
-    }
-  }, [theme, isLoading]);
+    const fetchProfileData = async () => {
+      if (!user?._id) return;
+      try {
+        setIsLoading(true);
+        const response = await api.get(`/profile/${user._id}`);
+        setProfile({
+          name: response.data.personal.name || '',
+          email: response.data.personal.email || '',
+          phone: response.data.personal.phone || '',
+          department: response.data.professional.department || '',
+          position: response.data.professional.position || '',
+          joinDate: response.data.professional.joinDate || '',
+        });
+        setError(null);
+      } catch (err) {
+        setError('Failed to load profile data');
+        toast.error('Failed to load profile data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfileData();
+  }, [user]);
   
   useEffect(() => {
     const fetchSettings = async () => {
@@ -91,14 +109,26 @@ const SettingsPage = () => {
         setIsLoading(true);
         
         const profileResponse = await api.get(`/settings/${user._id}/profile`);
-        setProfile({
-          name: profileResponse.data.name || user?.name || '',
-          email: profileResponse.data.email || user?.email || '',
-          phone: profileResponse.data.phone || '',
-          department: profileResponse.data.department || '',
-          position: profileResponse.data.position || '',
-          joinDate: profileResponse.data.joinDate || '',
-        });
+        // Support new backend structure for HR/admins
+        if (profileResponse.data.personal && profileResponse.data.professional) {
+          setProfile({
+            name: profileResponse.data.personal.name || user?.name || '',
+            email: profileResponse.data.personal.email || user?.email || '',
+            phone: profileResponse.data.personal.phone || '',
+            department: profileResponse.data.professional.department || '',
+            position: profileResponse.data.professional.position || '',
+            joinDate: profileResponse.data.professional.joinDate || '',
+          });
+        } else {
+          setProfile({
+            name: profileResponse.data.name || user?.name || '',
+            email: profileResponse.data.email || user?.email || '',
+            phone: profileResponse.data.phone || '',
+            department: profileResponse.data.department || '',
+            position: profileResponse.data.position || '',
+            joinDate: profileResponse.data.joinDate || '',
+          });
+        }
         
         const securityResponse = await api.get(`/settings/${user._id}/security`);
         setSecurity({
@@ -176,19 +206,27 @@ const SettingsPage = () => {
       toast.error('Please select an image to upload');
       return;
     }
-    
     try {
       setIsUploadingAvatar(true);
-      
       const formData = new FormData();
       formData.append('avatar', avatarFile);
-      
-      await api.post(`/settings/${user._id}/avatar`, formData, {
+      const response = await api.post(`/profile/${user._id}/avatar`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      
+      // Update user object in localStorage with new avatar URL
+      if (response.data && response.data.avatarUrl) {
+        const savedUser = localStorage.getItem('hrms_user');
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
+          userData.avatar = response.data.avatarUrl;
+          localStorage.setItem('hrms_user', JSON.stringify(userData));
+          if (user) {
+            user.avatar = response.data.avatarUrl;
+          }
+        }
+      }
       toast.success('Avatar updated successfully');
       setAvatarFile(null);
     } catch (err) {
@@ -425,7 +463,8 @@ const SettingsPage = () => {
                     id="department" 
                     placeholder="Department" 
                     value={profile.department} 
-                    readOnly 
+                    onChange={handleProfileChange}
+                    readOnly={user.role === 'employee'}
                   />
                 </div>
                 
@@ -435,7 +474,8 @@ const SettingsPage = () => {
                     id="position" 
                     placeholder="Job Position" 
                     value={profile.position} 
-                    readOnly 
+                    onChange={handleProfileChange}
+                    readOnly={user.role === 'employee'}
                   />
                 </div>
                 
@@ -444,8 +484,10 @@ const SettingsPage = () => {
                   <Input 
                     id="joinDate" 
                     placeholder="Join Date" 
-                    value={profile.joinDate ? new Date(profile.joinDate).toLocaleDateString() : ''} 
-                    readOnly 
+                    type="date"
+                    value={profile.joinDate ? new Date(profile.joinDate).toISOString().slice(0,10) : ''}
+                    onChange={handleProfileChange}
+                    readOnly={user.role === 'employee'}
                   />
                 </div>
               </div>

@@ -180,3 +180,38 @@ exports.getEmployeeReviews = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getPerformanceStats = async (req, res) => {
+  try {
+    const reviews = await Performance.find();
+    const total = reviews.length;
+    const averageRating = total > 0 ? (reviews.reduce((sum, r) => sum + (r.overallRating || 0), 0) / total) : 0;
+    const topPerformersCount = reviews.filter(r => (r.overallRating || 0) >= 4.5).length;
+    // For demo, set upcomingReviewsCount to 0
+    res.json({
+      averageRating,
+      upcomingReviewsCount: 0,
+      topPerformersCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getUpcomingReviews = async (req, res) => {
+  try {
+    // For demo, return empty array
+    res.json([]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getReviewTemplates = async (req, res) => {
+  try {
+    // For demo, return empty array
+    res.json([]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

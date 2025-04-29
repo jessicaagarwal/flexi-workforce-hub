@@ -58,9 +58,16 @@ exports.getAttendanceByEmployee = async (req, res) => {
 // Get full attendance list
 exports.getAllAttendance = async (req, res) => {
   try {
-    const all = await Attendance.find().populate('employee');
+    const all = await Attendance.find()
+      .populate({
+        path: 'employee',
+        select: 'name employeeId', // Only select the fields we need
+        model: 'Employee'
+      })
+      .sort({ date: -1 }); // Sort by date descending
     res.json(all);
   } catch (error) {
+    console.error('Error fetching attendance:', error);
     res.status(500).json({ message: error.message });
   }
 };
