@@ -338,7 +338,6 @@ const Payroll = () => {
                   
                   <div className="mt-6">
                     <Button 
-                      disabled={currentPayroll.status === 'Pending'}
                       onClick={() => handleDownloadPayslip(currentPayroll.id)}
                     >
                       <Download className="mr-2 h-4 w-4" />

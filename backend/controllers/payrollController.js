@@ -56,7 +56,9 @@ exports.getCurrentPayroll = async (req, res) => {
         tax,
         insurance,
         netPay,
-        status: 'Paid'
+        status: 'Paid',
+        month: currentDate.getMonth() + 1,
+        year: currentDate.getFullYear()
       });
       
       await newPayroll.save();
@@ -75,7 +77,7 @@ exports.getCurrentPayroll = async (req, res) => {
       tax: payroll.tax,
       insurance: payroll.insurance,
       netPay: payroll.netPay,
-      status: payroll.status
+      status: payroll.status || 'Paid'
     }));
     
     res.json(formattedPayrolls);
@@ -275,6 +277,7 @@ exports.markAsPaid = async (req, res) => {
 
 // Download payslip
 exports.downloadPayslip = async (req, res) => {
+  let payslipPath;
   try {
     const payslipId = req.params.id;
     
@@ -284,33 +287,20 @@ exports.downloadPayslip = async (req, res) => {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
     
-    // Get employee data for the payslip
-    let employeeData = {
-      name: "Employee",
-      position: "Staff",
-      department: "General"
-    };
-    
-    try {
-      // Try to get actual employee data if available
-      const payroll = await Payroll.findById(payslipId);
-      if (payroll && payroll.employee) {
-        const employee = await Employee.findById(payroll.employee);
-        if (employee) {
-          employeeData = {
-            name: employee.name || "Employee",
-            position: employee.position || "Staff",
-            department: employee.department || "General"
-          };
-        }
-      }
-    } catch (err) {
-      console.log("Using default employee data for payslip");
+    // Get payroll and employee data
+    const payroll = await Payroll.findById(payslipId);
+    if (!payroll) {
+      return res.status(404).json({ message: 'Payslip not found' });
     }
-    
+
+    const employee = await Employee.findById(payroll.employee);
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
     // Create a PDF file using pdfkit
     const PDFDocument = require('pdfkit');
-    const payslipPath = path.join(uploadsDir, `payslip-${payslipId}.pdf`);
+    payslipPath = path.join(uploadsDir, `payslip-${payslipId}.pdf`);
     const doc = new PDFDocument({ margin: 50 });
     
     // Pipe the PDF to a file
@@ -320,15 +310,15 @@ exports.downloadPayslip = async (req, res) => {
     // Add company header
     doc.fontSize(20).text('HRX COMPANY', { align: 'center' });
     doc.fontSize(16).text(`PAYSLIP #${payslipId}`, { align: 'center' });
-    doc.fontSize(12).text(`Date: ${new Date().toLocaleDateString()}`, { align: 'center' });
+    doc.fontSize(12).text(`Date: ${new Date(payroll.paymentDate).toLocaleDateString()}`, { align: 'center' });
     doc.moveDown(2);
     
     // Add employee information
     doc.fontSize(14).text('Employee Information', { underline: true });
     doc.moveDown(0.5);
-    doc.fontSize(12).text(`Name: ${employeeData.name}`);
-    doc.text(`Position: ${employeeData.position}`);
-    doc.text(`Department: ${employeeData.department}`);
+    doc.fontSize(12).text(`Name: ${employee.name}`);
+    doc.text(`Position: ${employee.position || 'Staff'}`);
+    doc.text(`Department: ${employee.department || 'General'}`);
     doc.moveDown(1);
     
     // Add earnings section
@@ -338,13 +328,13 @@ exports.downloadPayslip = async (req, res) => {
     // Helper function to add a row with two columns
     const addRow = (label, value) => {
       doc.text(label, { continued: true, width: 300 });
-      doc.text(value, { align: 'right' });
+      doc.text(`$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, { align: 'right' });
     };
     
-    addRow('Basic Salary:', '$5,000.00');
-    addRow('Allowances:', '$500.00');
-    addRow('Bonus:', '$200.00');
-    addRow('Overtime:', '$100.00');
+    addRow('Basic Salary:', payroll.basicSalary);
+    addRow('Allowances:', payroll.allowances);
+    addRow('Bonus:', payroll.bonus);
+    addRow('Overtime:', payroll.overtime);
     
     // Add a line
     doc.moveDown(0.5);
@@ -354,15 +344,16 @@ exports.downloadPayslip = async (req, res) => {
     doc.moveDown(0.5);
     
     // Total earnings
-    addRow('Total Earnings:', '$5,800.00');
+    const totalEarnings = payroll.basicSalary + payroll.allowances + payroll.bonus + payroll.overtime;
+    addRow('Total Earnings:', totalEarnings);
     doc.moveDown(1);
     
     // Add deductions section
     doc.fontSize(14).text('Deductions', { underline: true });
     doc.moveDown(0.5);
     
-    addRow('Tax:', '$500.00');
-    addRow('Insurance:', '$250.00');
+    addRow('Tax:', payroll.tax);
+    addRow('Insurance:', payroll.insurance);
     
     // Add a line
     doc.moveDown(0.5);
@@ -372,7 +363,8 @@ exports.downloadPayslip = async (req, res) => {
     doc.moveDown(0.5);
     
     // Total deductions
-    addRow('Total Deductions:', '$750.00');
+    const totalDeductions = payroll.tax + payroll.insurance;
+    addRow('Total Deductions:', totalDeductions);
     doc.moveDown(1);
     
     // Net pay
@@ -387,34 +379,51 @@ exports.downloadPayslip = async (req, res) => {
     
     // Net salary in bold
     doc.font('Helvetica-Bold');
-    addRow('Net Salary:', '$5,050.00');
+    addRow('Net Salary:', payroll.netPay);
     doc.font('Helvetica');
     doc.moveDown(2);
     
     // Footer
-    doc.fontSize(10).text('This is a sample payslip for demonstration purposes.', { align: 'center', italic: true });
+    doc.fontSize(10).text('This payslip is generated by HRX Company.', { align: 'center', italic: true });
     
     // Finalize the PDF
     doc.end();
     
     // Wait for the PDF to be created
-    writeStream.on('finish', () => {
-      // Set headers for PDF content
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="payslip-${payslipId}.pdf"`);
-      
-      // Send the file
-      const fileStream = fs.createReadStream(payslipPath);
-      fileStream.pipe(res);
-      
-      // Clean up the file after sending
-      fileStream.on('end', () => {
-        fs.unlinkSync(payslipPath);
-      });
+    await new Promise((resolve, reject) => {
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
+
+    // Set headers for PDF content
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="payslip-${payslipId}.pdf"`);
+    
+    // Send the file
+    const fileStream = fs.createReadStream(payslipPath);
+    fileStream.pipe(res);
+    
+    // Clean up the file after sending
+    fileStream.on('end', () => {
+      try {
+        if (fs.existsSync(payslipPath)) {
+          fs.unlinkSync(payslipPath);
+        }
+      } catch (err) {
+        console.error('Error cleaning up payslip file:', err);
+      }
     });
     
   } catch (error) {
     console.error('Error downloading payslip:', error);
+    // Clean up the file if it exists
+    if (payslipPath && fs.existsSync(payslipPath)) {
+      try {
+        fs.unlinkSync(payslipPath);
+      } catch (err) {
+        console.error('Error cleaning up payslip file:', err);
+      }
+    }
     res.status(500).json({ message: 'Failed to download payslip' });
   }
 };
