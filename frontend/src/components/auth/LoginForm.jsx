@@ -57,16 +57,6 @@ const LoginForm = () => {
     }
   };
 
-  const setAdminCredentials = () => {
-    form.setValue('email', 'admin@hrx.com');
-    form.setValue('password', 'admin123');
-  };
-
-  const setEmployeeCredentials = () => {
-    form.setValue('email', 'employee@hrx.com');
-    form.setValue('password', 'employee123');
-  };
-
   const handleGoogleSignIn = () => {
     toast.info('Google Sign-In coming soon!');
   };
@@ -146,15 +136,6 @@ const LoginForm = () => {
         <GoogleIcon className="h-5 w-5" />
         Sign in with Google
       </Button>
-
-      <div className="mt-6 text-center text-sm flex justify-center gap-4">
-        <Button variant="outline" size="sm" onClick={setAdminCredentials}>
-          Admin Demo
-        </Button>
-        <Button variant="outline" size="sm" onClick={setEmployeeCredentials}>
-          Employee Demo
-        </Button>
-      </div>
       
       <div className="mt-4 text-center text-sm">
         <p>

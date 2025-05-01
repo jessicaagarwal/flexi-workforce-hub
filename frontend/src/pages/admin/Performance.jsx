@@ -75,7 +75,7 @@ const AdminPerformance = () => {
     const fetchPerformanceData = async () => {
       try {
         setIsLoadingPerformance(true);
-        const response = await api.get('/performance');
+        const response = await api.get('/performance/reviews');
         
         // Format the data
         const formattedData = response.data.map(performance => ({
@@ -227,7 +227,7 @@ const AdminPerformance = () => {
       try {
         const empRes = await api.get('/employees');
         setAllEmployees(empRes.data);
-        const revRes = await api.get('/performance');
+        const revRes = await api.get('/performance/reviews');
         setAllReviews(revRes.data);
       } catch (err) {
         toast.error('Failed to fetch employees or reviews');
@@ -290,54 +290,77 @@ const AdminPerformance = () => {
     setReviewForm((prev) => ({ ...prev, rating: Number(value) }));
   };
   
-  // Helper to get review period from date
-  function getReviewPeriod(dateStr) {
-    const date = new Date(dateStr);
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    let quarter = 'Q1';
-    if (month >= 3 && month <= 5) quarter = 'Q2';
-    else if (month >= 6 && month <= 8) quarter = 'Q3';
-    else if (month >= 9 && month <= 11) quarter = 'Q4';
-    return `${quarter} ${year}`;
-  }
-  
   // Handle submit review
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post('/performance', {
+      // Format the review data to match backend expectations
+      const reviewData = {
         employee: reviewForm.employee,
-        overallRating: reviewForm.rating,
+        rating: reviewForm.rating,
         feedback: reviewForm.feedback,
         reviewDate: reviewForm.reviewDate,
-        reviewPeriod: getReviewPeriod(reviewForm.reviewDate)
-      });
+        reviewPeriod: getReviewPeriod(reviewForm.reviewDate),
+        status: 'Completed',
+        type: 'Annual' // Default to annual review
+      };
+
+      await api.post('/performance/reviews', reviewData);
+      
       toast.success('Review created successfully');
       setShowReviewModal(false);
-      setReviewForm({ employee: '', rating: 5, feedback: '', reviewDate: new Date().toISOString().slice(0,10) });
+      setReviewForm({ 
+        employee: '', 
+        rating: 5, 
+        feedback: '', 
+        reviewDate: new Date().toISOString().slice(0,10) 
+      });
+
       // Refresh performance data
-      const response = await api.get('/performance');
+      const response = await api.get('/performance/reviews');
       const formattedData = response.data.map(performance => ({
         id: performance._id,
         employeeId: performance.employee?.employeeId || 'N/A',
         name: performance.employee?.name || 'Unknown',
         department: performance.employee?.department || 'N/A',
         rating: performance.rating || 0,
-        lastReview: performance.lastReviewDate ? new Date(performance.lastReviewDate).toLocaleDateString('en-US', {
-          year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+        lastReview: performance.reviewDate ? new Date(performance.reviewDate).toLocaleDateString('en-US', {
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) : 'N/A',
         nextReview: performance.nextReviewDate ? new Date(performance.nextReviewDate).toLocaleDateString('en-US', {
-          year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) : 'N/A',
         status: performance.status || 'Not Rated'
       }));
       setPerformanceData(formattedData);
     } catch (err) {
-      toast.error('Failed to create review');
+      console.error('Error creating review:', err);
+      toast.error(err.response?.data?.message || 'Failed to create review');
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  // Helper to get review period from date
+  function getReviewPeriod(dateStr) {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    
+    // Determine quarter
+    let quarter;
+    if (month >= 0 && month <= 2) quarter = 'Q1';
+    else if (month >= 3 && month <= 5) quarter = 'Q2';
+    else if (month >= 6 && month <= 8) quarter = 'Q3';
+    else if (month >= 9 && month <= 11) quarter = 'Q4';
+    
+    return `${quarter} ${year}`;
+  }
   
   // Helper to get latest review for an employee
   function getLatestReviewForEmployee(employeeId) {
@@ -355,7 +378,7 @@ const AdminPerformance = () => {
       employeeId: emp.employeeId,
       name: emp.name,
       department: emp.department,
-      rating: review ? review.overallRating : 0,
+      rating: review ? (review.overallRating || 0) : 0,
       lastReview: review ? new Date(review.reviewDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
       nextReview: review ? (review.nextReviewDate ? new Date(review.nextReviewDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A') : 'N/A',
       status: review ? 'Rated' : 'Not Rated',
@@ -516,7 +539,7 @@ const AdminPerformance = () => {
                         <TableCell>{employee.department}</TableCell>
                         <TableCell>
                           <div className="flex items-center">
-                            <span className="font-medium mr-1">{employee.rating.toFixed(1)}</span>
+                            <span className="font-medium mr-1">{(employee.rating || 0).toFixed(1)}</span>
                             <Star className="h-4 w-4 text-yellow-400 fill-current" />
                           </div>
                         </TableCell>
@@ -684,46 +707,84 @@ const AdminPerformance = () => {
           <DialogHeader>
             <DialogTitle>Create Performance Review</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmitReview} className="space-y-4">
-            <div>
-              <Label htmlFor="employee">Employee</Label>
-              <Select value={reviewForm.employee} onValueChange={handleReviewSelectChange} required>
-                <SelectTrigger id="employee">
-                  <SelectValue placeholder="Select employee" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map(emp => (
-                    <SelectItem key={emp._id} value={emp._id}>{emp.name} ({emp.employeeId})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <form onSubmit={handleSubmitReview}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="employee">Employee</Label>
+                <Select
+                  value={reviewForm.employee}
+                  onValueChange={handleReviewSelectChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select employee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees.map((employee) => (
+                      <SelectItem key={employee._id} value={employee._id}>
+                        {employee.name} ({employee.employeeId})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="rating">Rating</Label>
+                <Select
+                  value={String(reviewForm.rating)}
+                  onValueChange={handleReviewRatingChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <SelectItem key={rating} value={String(rating)}>
+                        {rating} Star{rating !== 1 ? 's' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="reviewDate">Review Date</Label>
+                <Input
+                  type="date"
+                  id="reviewDate"
+                  name="reviewDate"
+                  value={reviewForm.reviewDate}
+                  onChange={handleReviewFormChange}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="feedback">Feedback</Label>
+                <Textarea
+                  id="feedback"
+                  name="feedback"
+                  placeholder="Enter feedback..."
+                  value={reviewForm.feedback}
+                  onChange={handleReviewFormChange}
+                  rows={4}
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="rating">Rating</Label>
-              <Select value={String(reviewForm.rating)} onValueChange={handleReviewRatingChange} required>
-                <SelectTrigger id="rating">
-                  <SelectValue placeholder="Select rating" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[5,4,3,2,1].map(r => (
-                    <SelectItem key={r} value={String(r)}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="reviewDate">Review Date</Label>
-              <Input type="date" id="reviewDate" name="reviewDate" value={reviewForm.reviewDate} onChange={handleReviewFormChange} required />
-            </div>
-            <div>
-              <Label htmlFor="feedback">Feedback</Label>
-              <Textarea id="feedback" name="feedback" value={reviewForm.feedback} onChange={handleReviewFormChange} placeholder="Enter feedback..." required />
-            </div>
-            <DialogFooter>
-              <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : 'Submit Review'}</Button>
-              <DialogClose asChild>
-                <Button type="button" variant="outline" onClick={handleCloseReviewModal}>Cancel</Button>
-              </DialogClose>
+
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={handleCloseReviewModal}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Review'
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

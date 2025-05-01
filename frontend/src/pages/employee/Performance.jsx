@@ -8,9 +8,15 @@ import api from '@/services/apiService';
 
 const Performance = () => {
   const { user } = useAuth();
+  const [employeeId, setEmployeeId] = useState(null);
   
   // State for performance overview
-  const [performanceOverview, setPerformanceOverview] = useState(null);
+  const [performanceOverview, setPerformanceOverview] = useState({
+    currentRating: 0,
+    previousRating: 0,
+    nextReviewDate: '',
+    reviewCycle: ''
+  });
   const [isLoadingOverview, setIsLoadingOverview] = useState(true);
   const [overviewError, setOverviewError] = useState(null);
   
@@ -31,87 +37,104 @@ const Performance = () => {
   
   // Calculate goal completion percentage
   const [goalCompletionPercentage, setGoalCompletionPercentage] = useState(0);
+
+  // Fetch employee ID first
+  useEffect(() => {
+    const fetchEmployeeId = async () => {
+      if (!user || !user._id) {
+        console.log('User or user._id not available yet:', user);
+        return;
+      }
+      
+      // Temporary: Restore performance data
+      try {
+        console.log('Restoring performance data...');
+        const restoreResponse = await api.post('/performance/restore');
+        console.log('Restore response:', restoreResponse.data);
+      } catch (err) {
+        console.error('Error restoring performance data:', err);
+      }
+      
+      try {
+        const response = await api.get(`/employees/by-user/${user._id}`);
+        setEmployeeId(response.data._id);
+      } catch (err) {
+        console.error('Error fetching employee ID:', err);
+      }
+    };
+    
+    fetchEmployeeId();
+  }, [user]);
   
   // Fetch performance overview
   useEffect(() => {
+    if (!employeeId) return;
+    
     const fetchPerformanceOverview = async () => {
-      if (!user?._id) return;
-      
       try {
         setIsLoadingOverview(true);
-        const response = await api.get(`/performance/employee/${user._id}`);
-        
+        const response = await api.get(`/performance/employee/${employeeId}`);
+        console.log('Performance overview response:', response.data);
         setPerformanceOverview({
-          currentRating: response.data.currentRating || 0,
+          currentRating: response.data.overallRating || 0,
           previousRating: response.data.previousRating || 0,
-          nextReviewDate: new Date(response.data.nextReviewDate).toLocaleDateString('en-US', {
+          nextReviewDate: response.data.nextReviewDate ? new Date(response.data.nextReviewDate).toLocaleDateString('en-US', {
             month: 'long',
             day: 'numeric',
             year: 'numeric'
-          }),
-          reviewCycle: response.data.reviewCycle || ''
+          }) : 'Not scheduled',
+          reviewCycle: response.data.reviewPeriod || 'N/A'
         });
-        
         setOverviewError(null);
       } catch (err) {
         console.error('Error fetching performance overview:', err);
         setOverviewError('Failed to fetch performance data');
-        
-        // Set default data if API fails
-        setPerformanceOverview({
-          currentRating: 0,
-          previousRating: 0,
-          nextReviewDate: 'Not scheduled',
-          reviewCycle: 'N/A'
-        });
       } finally {
         setIsLoadingOverview(false);
       }
     };
-    
     fetchPerformanceOverview();
-  }, [user]);
+  }, [employeeId]);
   
   // Fetch skills
   useEffect(() => {
+    if (!employeeId) return;
+    
     const fetchSkills = async () => {
-      if (!user?._id) return;
-      
       try {
         setIsLoadingSkills(true);
-        const response = await api.get(`/performance/employee/${user._id}/skills`);
-        
-        setSkills(response.data.map(skill => ({
-          name: skill.name,
-          rating: skill.rating || 0
-        })));
-        
+        const response = await api.get(`/performance/employee/${employeeId}/skills`);
+        console.log('Skills response:', response.data);
+        const skillsData = response.data.length > 0 ? response.data : [
+          { name: 'Communication', rating: 0, maxRating: 5 },
+          { name: 'Technical Knowledge', rating: 0, maxRating: 5 },
+          { name: 'Problem Solving', rating: 0, maxRating: 5 },
+          { name: 'Teamwork', rating: 0, maxRating: 5 },
+          { name: 'Leadership', rating: 0, maxRating: 5 }
+        ];
+        setSkills(skillsData);
         setSkillsError(null);
       } catch (err) {
         console.error('Error fetching skills:', err);
         setSkillsError('Failed to fetch skills data');
-        
-        // Set empty skills array if API fails
-        setSkills([]);
       } finally {
         setIsLoadingSkills(false);
       }
     };
-    
     fetchSkills();
-  }, [user]);
+  }, [employeeId]);
   
   // Fetch goals
   useEffect(() => {
+    if (!employeeId) return;
+    
     const fetchGoals = async () => {
-      if (!user?._id) return;
-      
       try {
         setIsLoadingGoals(true);
-        const response = await api.get(`/performance/employee/${user._id}/goals`);
-        
+        const response = await api.get(`/performance/employee/${employeeId}/goals`);
+        console.log('Goals response:', response.data);
         const formattedGoals = response.data.map(goal => ({
-          id: goal._id,
+          id: goal.id || Math.random().toString(36).substr(2, 9),
           title: goal.title,
           progress: goal.progress || 0,
           dueDate: new Date(goal.dueDate).toLocaleDateString('en-US', {
@@ -121,10 +144,7 @@ const Performance = () => {
           }),
           status: goal.status || 'Not Started'
         }));
-        
         setGoals(formattedGoals);
-        
-        // Calculate goal completion percentage
         if (formattedGoals.length > 0) {
           const totalProgress = formattedGoals.reduce((sum, goal) => sum + goal.progress, 0);
           const averageProgress = Math.round(totalProgress / formattedGoals.length);
@@ -132,32 +152,26 @@ const Performance = () => {
         } else {
           setGoalCompletionPercentage(0);
         }
-        
         setGoalsError(null);
       } catch (err) {
         console.error('Error fetching goals:', err);
         setGoalsError('Failed to fetch goals data');
-        
-        // Set empty goals array if API fails
-        setGoals([]);
-        setGoalCompletionPercentage(0);
       } finally {
         setIsLoadingGoals(false);
       }
     };
-    
     fetchGoals();
-  }, [user]);
+  }, [employeeId]);
   
   // Fetch feedback
   useEffect(() => {
+    if (!employeeId) return;
+    
     const fetchFeedback = async () => {
-      if (!user?._id) return;
-      
       try {
         setIsLoadingFeedback(true);
-        const response = await api.get(`/performance/employee/${user._id}/feedback`);
-        
+        const response = await api.get(`/performance/employee/${employeeId}/feedback`);
+        console.log('Feedback response:', response.data);
         const formattedFeedback = response.data.map(item => ({
           id: item._id,
           date: new Date(item.date).toLocaleDateString('en-US', {
@@ -165,26 +179,21 @@ const Performance = () => {
             day: 'numeric',
             year: 'numeric'
           }),
-          reviewer: item.reviewer,
-          content: item.content,
+          reviewer: item.reviewer?.name || 'Anonymous',
+          content: item.feedback || '',
           rating: item.rating || 0
         }));
-        
         setFeedback(formattedFeedback);
         setFeedbackError(null);
       } catch (err) {
         console.error('Error fetching feedback:', err);
         setFeedbackError('Failed to fetch feedback data');
-        
-        // Set empty feedback array if API fails
-        setFeedback([]);
       } finally {
         setIsLoadingFeedback(false);
       }
     };
-    
     fetchFeedback();
-  }, [user]);
+  }, [employeeId]);
 
   return (
     <div className="space-y-6">
@@ -206,7 +215,7 @@ const Performance = () => {
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : overviewError ? (
-              <div className="text-sm text-red-500">Error loading rating</div>
+              <div className="text-sm text-red-500">{overviewError}</div>
             ) : (
               <>
                 <div className="flex items-center">
@@ -221,11 +230,13 @@ const Performance = () => {
                     ))}
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {performanceOverview.currentRating > performanceOverview.previousRating 
-                    ? `+${(performanceOverview.currentRating - performanceOverview.previousRating).toFixed(1)} from last review` 
-                    : `${(performanceOverview.currentRating - performanceOverview.previousRating).toFixed(1)} from last review`}
-                </p>
+                {performanceOverview.previousRating > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {performanceOverview.currentRating > performanceOverview.previousRating 
+                      ? `+${(performanceOverview.currentRating - performanceOverview.previousRating).toFixed(1)} from last review` 
+                      : `${(performanceOverview.currentRating - performanceOverview.previousRating).toFixed(1)} from last review`}
+                  </p>
+                )}
               </>
             )}
           </CardContent>
@@ -241,7 +252,7 @@ const Performance = () => {
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : overviewError ? (
-              <div className="text-sm text-red-500">Error loading review date</div>
+              <div className="text-sm text-red-500">{overviewError}</div>
             ) : (
               <>
                 <div className="text-xl font-bold">{performanceOverview.nextReviewDate}</div>
@@ -261,7 +272,7 @@ const Performance = () => {
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : goalsError ? (
-              <div className="text-sm text-red-500">Error loading goals</div>
+              <div className="text-sm text-red-500">{goalsError}</div>
             ) : (
               <>
                 <div className="text-xl font-bold">{goalCompletionPercentage}%</div>
@@ -303,9 +314,9 @@ const Performance = () => {
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">{skill.name}</span>
-                        <span className="text-sm text-muted-foreground">{skill.rating}%</span>
+                        <span className="text-sm text-muted-foreground">{(skill.rating / skill.maxRating * 100).toFixed(0)}%</span>
                       </div>
-                      <Progress value={skill.rating} className="h-2" />
+                      <Progress value={(skill.rating / skill.maxRating * 100)} className="h-2" />
                     </div>
                   ))}
                 </div>

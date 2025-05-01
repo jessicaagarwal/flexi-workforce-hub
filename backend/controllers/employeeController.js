@@ -1,5 +1,6 @@
 const Employee = require('../models/Employee');
 const User = require('../models/User');
+const Performance = require('../models/Performance');
 
 // Get employee by user ID
 exports.getEmployeeByUserId = async (req, res) => {
@@ -85,8 +86,8 @@ exports.createEmployeeWithCredentials = async (req, res) => {
       name,
       email,
       employeeId,
-      createdBy: req.user._id, // HR's user ID from JWT/session
-      user: user._id, // optional: link User and Employee
+      createdBy: user._id, // Link to the new employee's user ID
+      user: user._id, // link User and Employee
       ...otherFields
     });
     try {
@@ -107,6 +108,109 @@ exports.getEmployeesForHR = async (req, res) => {
   try {
     const employees = await Employee.find({ createdBy: req.user._id });
     res.json(employees);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Utility endpoint to fix existing employees' createdBy field
+exports.fixEmployeeCreatedBy = async (req, res) => {
+  try {
+    const employees = await Employee.find({ user: { $exists: true, $ne: null } });
+    let updated = 0;
+    for (const emp of employees) {
+      if (emp.createdBy.toString() !== emp.user.toString()) {
+        emp.createdBy = emp.user;
+        await emp.save();
+        updated++;
+      }
+    }
+    res.json({ message: `Updated ${updated} employees' createdBy field to match user field.` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Utility endpoint to set up performance records for existing employees
+exports.setupPerformanceRecords = async (req, res) => {
+  try {
+    const employees = await Employee.find();
+    let created = 0;
+    let skipped = 0;
+    const createdRecords = [];
+
+    for (const emp of employees) {
+      // Check if employee already has a performance record
+      const existingRecord = await Performance.findOne({ employee: emp._id });
+      if (existingRecord) {
+        skipped++;
+        continue;
+      }
+
+      // Create default performance record
+      const record = await createDefaultPerformanceRecord(emp._id, emp.createdBy);
+      createdRecords.push({
+        employee: {
+          name: emp.name,
+          email: emp.email,
+          employeeId: emp.employeeId
+        },
+        skills: record.kpis,
+        goals: JSON.parse(record.nextGoals)
+      });
+      created++;
+    }
+
+    res.json({ 
+      message: `Created ${created} performance records. Skipped ${skipped} employees who already had records.`,
+      createdRecords
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Utility endpoint to view all performance records
+exports.viewPerformanceRecords = async (req, res) => {
+  try {
+    const records = await Performance.find()
+      .populate('employee', 'name email employeeId')
+      .populate('reviewer', 'name email')
+      .lean();
+
+    const formattedRecords = records.map(record => ({
+      employee: {
+        name: record.employee?.name,
+        email: record.employee?.email,
+        employeeId: record.employee?.employeeId
+      },
+      reviewer: record.reviewer?.name,
+      reviewPeriod: record.reviewPeriod,
+      skills: record.kpis.map(kpi => ({
+        name: kpi.metric,
+        score: kpi.score,
+        weightage: kpi.weightage
+      })),
+      goals: JSON.parse(record.nextGoals || '[]'),
+      overallRating: record.overallRating,
+      reviewDate: record.reviewDate,
+      status: record.status
+    }));
+
+    res.json({
+      totalRecords: records.length,
+      records: formattedRecords
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Utility endpoint to reset performance records
+exports.resetPerformanceRecords = async (req, res) => {
+  try {
+    await Performance.deleteMany({});
+    res.json({ message: 'All performance records have been reset.' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

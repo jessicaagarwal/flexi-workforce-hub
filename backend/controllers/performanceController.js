@@ -1,51 +1,31 @@
 const Performance = require('../models/Performance');
 const Employee = require('../models/Employee');
 
-// Get employee performance overview
+// Get employee performance
 exports.getEmployeePerformance = async (req, res) => {
   try {
-    // Find the employee's performance reviews
-    const performances = await Performance.find({ employee: req.params.id })
-      .sort({ reviewDate: -1 })
-      .populate('reviewer');
+    // Find the employee's most recent performance review
+    const latestPerformance = await Performance.findOne({ employee: req.params.id })
+      .sort({ reviewDate: -1 });
     
-    if (performances.length === 0) {
-      // If no performance reviews found, create a default response
-      return res.json({
-        currentRating: 0,
-        lastReviewDate: null,
-        nextReviewDate: new Date(Date.now() + 90 * 86400000).toISOString(), // 90 days from now
-        trend: 'new'
-      });
-    }
+    // Find the previous performance review
+    const previousPerformance = await Performance.findOne({ 
+      employee: req.params.id,
+      reviewDate: { $lt: latestPerformance?.reviewDate || new Date() }
+    }).sort({ reviewDate: -1 });
     
-    // Get the most recent performance review
-    const latestPerformance = performances[0];
+    // Calculate next review date (3 months from last review)
+    const nextReviewDate = latestPerformance 
+      ? new Date(latestPerformance.reviewDate.getTime() + (90 * 24 * 60 * 60 * 1000))
+      : new Date(Date.now() + (90 * 24 * 60 * 60 * 1000));
     
-    // Calculate the next review date (6 months after the last review)
-    const nextReviewDate = new Date(latestPerformance.reviewDate);
-    nextReviewDate.setMonth(nextReviewDate.getMonth() + 6);
-    
-    // Calculate the trend by comparing the latest review with the previous one
-    let trend = 'stable';
-    if (performances.length > 1) {
-      const previousPerformance = performances[1];
-      if (latestPerformance.overallRating > previousPerformance.overallRating) {
-        trend = 'improving';
-      } else if (latestPerformance.overallRating < previousPerformance.overallRating) {
-        trend = 'declining';
-      }
-    }
-    
-    // Format the response
-    const performance = {
-      currentRating: latestPerformance.overallRating || 0,
-      lastReviewDate: latestPerformance.reviewDate,
-      nextReviewDate: nextReviewDate.toISOString(),
-      trend
-    };
-    
-    res.json(performance);
+    res.json({
+      overallRating: latestPerformance?.overallRating || 0,
+      previousRating: previousPerformance?.overallRating || 0,
+      nextReviewDate: nextReviewDate,
+      reviewPeriod: latestPerformance?.reviewPeriod || 'Not Started',
+      lastReviewDate: latestPerformance?.reviewDate || null
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -72,8 +52,8 @@ exports.getEmployeeSkills = async (req, res) => {
     // Format the KPIs as skills
     const skills = latestPerformance.kpis.map(kpi => ({
       name: kpi.metric,
-      rating: kpi.score,
-      maxRating: 5 // Assuming a 5-point scale
+      rating: kpi.score || 0,
+      maxRating: 5 // Using a 5-point scale
     }));
     
     res.json(skills);
@@ -94,7 +74,7 @@ exports.getEmployeeGoals = async (req, res) => {
       return res.json([]);
     }
     
-    // Parse the nextGoals field (assuming it's a comma-separated list or JSON string)
+    // Parse the nextGoals field
     let goals = [];
     try {
       // Try to parse as JSON
@@ -105,11 +85,20 @@ exports.getEmployeeGoals = async (req, res) => {
       goals = goalsList.map((goal, index) => ({
         id: index + 1,
         title: goal,
-        dueDate: new Date(Date.now() + 90 * 86400000).toISOString(), // 90 days from now
+        dueDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
         status: 'In Progress',
         progress: 0
       }));
     }
+    
+    // Ensure each goal has all required fields
+    goals = goals.map((goal, index) => ({
+      id: goal.id || index + 1,
+      title: goal.title || 'Untitled Goal',
+      dueDate: goal.dueDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      status: goal.status || 'In Progress',
+      progress: goal.progress || 0
+    }));
     
     res.json(goals);
   } catch (error) {
@@ -121,22 +110,17 @@ exports.getEmployeeGoals = async (req, res) => {
 exports.getEmployeeFeedback = async (req, res) => {
   try {
     // Find all performance reviews for the employee
-    const performances = await Performance.find({ employee: req.params.id })
+    const reviews = await Performance.find({ employee: req.params.id })
       .sort({ reviewDate: -1 })
-      .populate('reviewer');
+      .populate('reviewer', 'name');
     
-    if (performances.length === 0) {
-      // If no performance reviews found, return an empty array
-      return res.json([]);
-    }
-    
-    // Format the performance reviews as feedback
-    const feedback = performances.map((performance, index) => ({
-      id: index + 1,
-      reviewer: performance.reviewer ? performance.reviewer.name : 'Anonymous',
-      date: performance.reviewDate,
-      content: performance.feedback || 'No feedback provided.',
-      rating: performance.overallRating || 0
+    // Format the feedback
+    const feedback = reviews.map(review => ({
+      _id: review._id,
+      date: review.reviewDate,
+      reviewer: review.reviewer,
+      feedback: review.feedback || '',
+      rating: review.overallRating || 0
     }));
     
     res.json(feedback);
@@ -148,10 +132,13 @@ exports.getEmployeeFeedback = async (req, res) => {
 // Add performance review
 exports.addReview = async (req, res) => {
   try {
+    // Create the review with the rating field
     const review = await Performance.create({
       ...req.body,
-      reviewer: req.user._id
+      reviewer: req.user._id,
+      overallRating: req.body.rating // Map the rating from frontend to overallRating
     });
+    
     res.status(201).json(review);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -163,7 +150,8 @@ exports.getAllReviews = async (req, res) => {
   try {
     const reviews = await Performance.find()
       .populate('employee')
-      .populate('reviewer');
+      .populate('reviewer')
+      .sort({ reviewDate: -1 });
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -187,7 +175,7 @@ exports.getPerformanceStats = async (req, res) => {
     const total = reviews.length;
     const averageRating = total > 0 ? (reviews.reduce((sum, r) => sum + (r.overallRating || 0), 0) / total) : 0;
     const topPerformersCount = reviews.filter(r => (r.overallRating || 0) >= 4.5).length;
-    // For demo, set upcomingReviewsCount to 0
+    
     res.json({
       averageRating,
       upcomingReviewsCount: 0,
@@ -200,8 +188,14 @@ exports.getPerformanceStats = async (req, res) => {
 
 exports.getUpcomingReviews = async (req, res) => {
   try {
-    // For demo, return empty array
-    res.json([]);
+    const reviews = await Performance.find({
+      reviewDate: { $gte: new Date() }
+    })
+    .populate('employee')
+    .populate('reviewer')
+    .sort({ reviewDate: 1 });
+    
+    res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

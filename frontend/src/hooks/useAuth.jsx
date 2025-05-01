@@ -32,6 +32,34 @@ export const AuthProvider = ({ children }) => {
     dispatch(setReduxLoading(false));
   }, [dispatch]);
   
+  // Helper to fetch employee _id and merge into user object
+  const fetchEmployeeIdAndSetUser = async (userData, token) => {
+    try {
+      // Only for employees
+      if (userData.role === 'employee') {
+        // Fetch employee record by createdBy
+        const response = await api.get(`/employees/by-user/${userData._id}`);
+        if (response.data && response.data._id) {
+          const mergedUser = { ...userData, _id: response.data._id, employeeProfile: response.data };
+          setUser(mergedUser);
+          localStorage.setItem('hrms_user', JSON.stringify(mergedUser));
+          dispatch(setCredentials({ user: mergedUser, token }));
+          return mergedUser;
+        }
+      }
+      // Fallback: just set user as is
+      setUser(userData);
+      localStorage.setItem('hrms_user', JSON.stringify(userData));
+      dispatch(setCredentials({ user: userData, token }));
+      return userData;
+    } catch (err) {
+      setUser(userData);
+      localStorage.setItem('hrms_user', JSON.stringify(userData));
+      dispatch(setCredentials({ user: userData, token }));
+      return userData;
+    }
+  };
+  
   const login = async (email, password) => {
     setIsLoading(true);
     dispatch(setReduxLoading(true));
@@ -41,17 +69,13 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/auth/login', { email, password });
       const { token, ...userData } = response.data;
       
-      // Save to state and localStorage
-      setUser(userData);
+      // Fetch and set employee _id if needed
+      const mergedUser = await fetchEmployeeIdAndSetUser(userData, token);
       setToken(token);
-      localStorage.setItem('hrms_user', JSON.stringify(userData));
       localStorage.setItem('hrms_token', token);
       
-      // Update Redux store
-      dispatch(setCredentials({ user: userData, token }));
-      
       toast.success('Login successful!');
-      return userData; // Return the user object for navigation in the component
+      return mergedUser; // Return the user object for navigation in the component
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Login failed';
       toast.error(errorMessage);

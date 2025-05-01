@@ -15,8 +15,9 @@ const {
 const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
-router.post('/', protect, addReview);
-router.get('/', protect, getAllReviews);
+// Performance review routes
+router.post('/reviews', protect, addReview);
+router.get('/reviews', protect, getAllReviews);
 router.get('/employee/:id', protect, getEmployeePerformance);
 router.get('/employee/:id/skills', protect, getEmployeeSkills);
 router.get('/employee/:id/goals', protect, getEmployeeGoals);

@@ -1,10 +1,16 @@
 const User = require('../models/User');
 const Employee = require('../models/Employee');
+const mongoose = require('mongoose');
 
 // Get profile settings
 exports.getProfileSettings = async (req, res) => {
   try {
     const userId = req.params.id;
+    
+    // Validate user ID format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
     
     // Find the user
     const user = await User.findById(userId);
@@ -12,15 +18,26 @@ exports.getProfileSettings = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // Find the employee associated with this user or create if it doesn't exist
+    // Check if user has HR role
+    if (user.role !== 'hr' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. HR or admin role required.' });
+    }
+    
+    // Find the employee associated with this user
     let employee = await Employee.findOne({ createdBy: userId });
     if (!employee) {
       // Create a new employee record with default values
-      employee = await Employee.create({
-        name: user.name,
-        email: user.email,
-        createdBy: userId
-      });
+      try {
+        employee = await Employee.create({
+          name: user.name,
+          email: user.email,
+          createdBy: userId,
+          employeeId: `EMP${Date.now()}` // Generate a unique employee ID
+        });
+      } catch (error) {
+        console.error('Error creating employee record:', error);
+        return res.status(500).json({ message: 'Error creating employee record' });
+      }
     }
     
     // Return combined profile data
@@ -31,10 +48,13 @@ exports.getProfileSettings = async (req, res) => {
       department: employee.department || '',
       position: employee.position || '',
       joinDate: employee.joinDate || new Date(),
-      avatar: user.avatar || ''
+      avatar: user.avatar || '',
+      role: user.role,
+      employeeId: employee.employeeId
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error in getProfileSettings:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 

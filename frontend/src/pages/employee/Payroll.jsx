@@ -32,11 +32,12 @@ const Payroll = () => {
   // Fetch current payroll data
   useEffect(() => {
     const fetchCurrentPayroll = async () => {
-      if (!user?._id) return;
+      const employeeId = user.employeeProfile?.createdBy || user.createdBy || user._id;
+      if (!employeeId) return;
       
       try {
         setIsLoadingCurrent(true);
-        const response = await api.get(`/payrolls/employee/${user._id}`);
+        const response = await api.get(`/payrolls/employee/${employeeId}`);
         
         // Sort by date (newest first) and get the most recent
         const sortedPayrolls = response.data.sort(
@@ -88,11 +89,12 @@ const Payroll = () => {
   // Fetch payslip history
   useEffect(() => {
     const fetchPayslipHistory = async () => {
-      if (!user?._id) return;
+      const employeeId = user.employeeProfile?.createdBy || user.createdBy || user._id;
+      if (!employeeId) return;
       
       try {
         setIsLoadingHistory(true);
-        const response = await api.get(`/payrolls/employee/${user._id}/history`);
+        const response = await api.get(`/payrolls/employee/${employeeId}/history`);
         
         // Format the data
         const formattedHistory = response.data.map(payslip => {
@@ -142,13 +144,29 @@ const Payroll = () => {
   // Fetch bank details
   useEffect(() => {
     const fetchBankDetails = async () => {
-      if (!user?._id) return;
+      // Log user data to see what we're working with
+      console.log('User data:', user);
+      
+      // Get the correct ID - try all possible paths
+      const userId = user?.employeeProfile?.createdBy || user?.createdBy || user?._id;
+      if (!userId) {
+        console.error('No user ID available:', user);
+        return;
+      }
       
       try {
         setIsLoadingBank(true);
-        const response = await api.get(`/employees/${user._id}/bank-details`);
         
-        setBankDetails(response.data);
+        // First get the employee data
+        const employeeResponse = await api.get(`/employees/by-user/${userId}`);
+        console.log('Employee response:', employeeResponse.data);
+        
+        // Set bank details from employee data
+        setBankDetails({
+          bankName: employeeResponse.data.bankName || 'National Bank',
+          accountNumber: employeeResponse.data.accountNumber || '**** **** **** 1234',
+          accountHolder: employeeResponse.data.name || user?.name || 'Employee'
+        });
         setBankError(null);
       } catch (err) {
         console.error('Error fetching bank details:', err);

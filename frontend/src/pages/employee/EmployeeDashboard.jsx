@@ -53,11 +53,12 @@ const EmployeeDashboard = () => {
   // Check if user is already clocked in today
   useEffect(() => {
     const checkClockInStatus = async () => {
-      if (!user?._id) return;
+      const employeeId = user?.employeeId || user?.employeeProfile?._id;
+      if (!employeeId) return;
       
       try {
         const today = new Date().toISOString().slice(0, 10);
-        const response = await api.get(`/attendance/employee/${user._id}`);
+        const response = await api.get(`/attendance/employee/${employeeId}`);
         
         // Find today's attendance record
         const todayRecord = response.data.find(record => 
@@ -77,10 +78,11 @@ const EmployeeDashboard = () => {
   // Fetch attendance data
   useEffect(() => {
     const fetchAttendanceData = async () => {
-      if (!user?._id) return;
+      const employeeId = user?.employeeId || user?.employeeProfile?._id;
+      if (!employeeId) return;
       
       try {
-        const response = await api.get(`/attendance/employee/${user._id}`);
+        const response = await api.get(`/attendance/employee/${employeeId}`);
         
         // Calculate attendance rate
         const totalDays = response.data.length;
@@ -112,10 +114,11 @@ const EmployeeDashboard = () => {
   // Fetch leave balance
   useEffect(() => {
     const fetchLeaveBalance = async () => {
-      if (!user?._id) return;
+      const employeeId = user?.employeeProfile?._id || user?.employeeId || user?._id;
+      if (!employeeId) return;
       
       try {
-        const response = await api.get(`/leaves/balance/${user._id}`);
+        const response = await api.get(`/leaves/balance/${employeeId}`);
         const annualLeave = response.data.annual || 0;
         const totalAnnual = 20; // Assuming total annual leave is 20 days
         const percentage = Math.round((annualLeave / totalAnnual) * 100);
@@ -143,10 +146,12 @@ const EmployeeDashboard = () => {
   // Fetch payroll data
   useEffect(() => {
     const fetchPayrollData = async () => {
-      if (!user?._id) return;
+      const employeeId = user.employeeProfile?.createdBy || user.createdBy || user._id;
+      if (!employeeId) return;
       
       try {
-        const response = await api.get(`/payrolls/employee/${user._id}`);
+        setPayrollData(prev => ({ ...prev, isLoading: true }));
+        const response = await api.get(`/payrolls/employee/${employeeId}`);
         
         // Sort by date (newest first) and get the most recent
         const sortedPayrolls = response.data.sort(

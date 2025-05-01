@@ -78,10 +78,11 @@ const SettingsPage = () => {
   
   useEffect(() => {
     const fetchProfileData = async () => {
-      if (!user?._id) return;
+      const userId = user.employeeProfile?.createdBy || user.createdBy || user._id;
+      if (!userId) return;
       try {
         setIsLoading(true);
-        const response = await api.get(`/profile/${user._id}`);
+        const response = await api.get(`/profile/${userId}`);
         setProfile({
           name: response.data.personal.name || '',
           email: response.data.personal.email || '',
@@ -103,12 +104,27 @@ const SettingsPage = () => {
   
   useEffect(() => {
     const fetchSettings = async () => {
-      if (!user?._id) return;
-      
+      const userId = user.employeeProfile?.createdBy || user.createdBy || user._id;
+      if (!userId) {
+        setError('User ID not found');
+        toast.error('User ID not found');
+        return;
+      }
       try {
         setIsLoading(true);
         
-        const profileResponse = await api.get(`/settings/${user._id}/profile`);
+        const profileResponse = await api.get(`/settings/${userId}/profile`);
+        if (!profileResponse.data) {
+          throw new Error('No profile data received');
+        }
+
+        // Check if user has required role
+        if (profileResponse.data.role !== 'hr' && profileResponse.data.role !== 'admin') {
+          setError('Access denied. HR or admin role required.');
+          toast.error('Access denied. HR or admin role required.');
+          return;
+        }
+        
         // Support new backend structure for HR/admins
         if (profileResponse.data.personal && profileResponse.data.professional) {
           setProfile({
@@ -118,6 +134,7 @@ const SettingsPage = () => {
             department: profileResponse.data.professional.department || '',
             position: profileResponse.data.professional.position || '',
             joinDate: profileResponse.data.professional.joinDate || '',
+            employeeId: profileResponse.data.employeeId || '',
           });
         } else {
           setProfile({
@@ -127,16 +144,17 @@ const SettingsPage = () => {
             department: profileResponse.data.department || '',
             position: profileResponse.data.position || '',
             joinDate: profileResponse.data.joinDate || '',
+            employeeId: profileResponse.data.employeeId || '',
           });
         }
         
-        const securityResponse = await api.get(`/settings/${user._id}/security`);
+        const securityResponse = await api.get(`/settings/${userId}/security`);
         setSecurity({
           twoFactorEnabled: securityResponse.data.twoFactorEnabled || false,
           loginNotifications: securityResponse.data.loginNotifications || false,
         });
         
-        const notificationResponse = await api.get(`/settings/${user._id}/notifications`);
+        const notificationResponse = await api.get(`/settings/${userId}/notifications`);
         setNotificationPrefs({
           leaveRequests: notificationResponse.data.leaveRequests || false,
           performanceReviews: notificationResponse.data.performanceReviews || false,
@@ -146,7 +164,7 @@ const SettingsPage = () => {
           attendanceReminders: notificationResponse.data.attendanceReminders || false,
         });
         
-        const preferencesResponse = await api.get(`/settings/${user._id}/preferences`);
+        const preferencesResponse = await api.get(`/settings/${userId}/preferences`);
         setAppPrefs({
           darkMode: preferencesResponse.data.darkMode || false,
           systemLanguage: preferencesResponse.data.systemLanguage || false,
@@ -157,8 +175,9 @@ const SettingsPage = () => {
         setError(null);
       } catch (err) {
         console.error('Error fetching settings:', err);
-        setError('Failed to load settings');
-        toast.error('Failed to load settings');
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to load settings';
+        setError(errorMessage);
+        toast.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -383,7 +402,11 @@ const SettingsPage = () => {
               <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 items-start">
                 <div className="flex flex-col items-center space-y-2">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={getFileUrl(user?.avatar)} alt={profile.name} />
+                    <AvatarImage 
+                      src={getFileUrl(user?.avatar)} 
+                      alt={profile.name} 
+                      onError={(e) => { e.target.onerror = null; e.target.src = "/placeholder.svg"; }}
+                    />
                     <AvatarFallback className="text-2xl">{profile.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-center">

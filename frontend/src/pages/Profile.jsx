@@ -79,11 +79,12 @@ const Profile = () => {
   // Fetch profile data
   useEffect(() => {
     const fetchProfileData = async () => {
-      if (!user?._id) return;
+      const userId = user.employeeProfile?.createdBy || user.createdBy || user._id;
+      if (!userId) return;
       
       try {
         setIsLoading(true);
-        const response = await api.get(`/profile/${user._id}`);
+        const response = await api.get(`/profile/${userId}`);
         
         // Update personal info
         if (response.data.personal) {
@@ -154,7 +155,13 @@ const Profile = () => {
   
   const handleBankInfoChange = (e) => {
     const { name, value } = e.target;
-    setBankInfo(prev => ({ ...prev, [name]: value }));
+    if (name === 'salary') {
+      // Remove currency symbol and commas, then convert to number
+      const numericValue = value.replace(/[₹,]/g, '');
+      setBankInfo(prev => ({ ...prev, [name]: numericValue }));
+    } else {
+      setBankInfo(prev => ({ ...prev, [name]: value }));
+    }
   };
   
   const handleAvatarChange = (e) => {
@@ -246,12 +253,19 @@ const Profile = () => {
     try {
       setIsSavingBank(true);
       
-      await api.put(`/profile/${user._id}/bank`, bankInfo);
+      // Format salary as number before sending
+      const formattedBankInfo = {
+        ...bankInfo,
+        salary: bankInfo.salary ? Number(bankInfo.salary) : null
+      };
+      
+      await api.put(`/profile/${user._id}/bank`, formattedBankInfo);
       
       toast.success('Bank information updated successfully');
     } catch (err) {
       console.error('Error updating bank information:', err);
-      toast.error('Failed to update bank information');
+      const errorMessage = err.response?.data?.message || 'Failed to update bank information';
+      toast.error(errorMessage);
     } finally {
       setIsSavingBank(false);
     }
@@ -288,7 +302,11 @@ const Profile = () => {
         <div className="flex flex-col md:flex-row md:items-center gap-6 mb-6">
           <div className="flex flex-col items-center">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={getFileUrl(user?.avatar)} alt={user?.name} />
+              <AvatarImage 
+                src={getFileUrl(user?.avatar)} 
+                alt={user?.name} 
+                onError={(e) => { e.target.onerror = null; e.target.src = "/placeholder.svg"; }}
+              />
               <AvatarFallback className="text-2xl">{user?.name?.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="mt-2 flex flex-col items-center">

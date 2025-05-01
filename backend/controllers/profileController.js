@@ -196,11 +196,18 @@ exports.updateBankInfo = async (req, res) => {
   try {
     const userId = req.params.id;
     const { accountName, accountNumber, bankName, branch, ifscCode, panCard, salary, taxInformation } = req.body;
+    
+    // Validate salary is a number
+    if (salary !== undefined && salary !== null && isNaN(Number(salary))) {
+      return res.status(400).json({ message: 'Salary must be a valid number' });
+    }
+    
     // Get user data
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    
     if (user.role === 'employee') {
       // Update employee data or create if it doesn't exist
       let employee = await Employee.findOne({ createdBy: userId });
@@ -211,31 +218,30 @@ exports.updateBankInfo = async (req, res) => {
           createdBy: userId
         });
       }
+      
+      // Update employee fields
       employee.accountName = accountName;
       employee.accountNumber = accountNumber;
       employee.bankName = bankName;
       employee.branch = branch;
       employee.ifscCode = ifscCode;
       employee.panCard = panCard;
-      employee.salary = salary;
+      employee.salary = salary ? Number(salary) : null;
       employee.taxInformation = taxInformation;
-      await employee.save();
-      res.json({ message: 'Bank information updated successfully (employee)' });
+      
+      try {
+        await employee.save();
+        res.json({ message: 'Bank information updated successfully' });
+      } catch (error) {
+        console.error('Error saving employee:', error);
+        res.status(400).json({ message: 'Error updating bank information', error: error.message });
+      }
     } else {
-      // HR/admin: store bank info in User
-      user.accountName = accountName;
-      user.accountNumber = accountNumber;
-      user.bankName = bankName;
-      user.branch = branch;
-      user.ifscCode = ifscCode;
-      user.panCard = panCard;
-      user.salary = salary;
-      user.taxInformation = taxInformation;
-      await user.save();
-      res.json({ message: 'Bank information updated successfully (user)' });
+      res.status(403).json({ message: 'Only employees can update bank information' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error in updateBankInfo:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 

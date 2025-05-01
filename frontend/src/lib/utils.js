@@ -17,24 +17,22 @@ export function cn(...inputs) {
  * @returns {string} The full URL for the file
  */
 export function getFileUrl(url) {
-  // If the URL is null, undefined, or empty, return an empty string
-  if (!url) return '';
+  // If the URL is null, undefined, or empty, return a default avatar
+  if (!url) return '/placeholder.svg';
   
   // If the URL starts with http:// or https://, it's already a full URL
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
   
-  // If the URL starts with /uploads/, prepend the base URL without the /api prefix
-  if (url.startsWith('/uploads/')) {
-    // Extract the base URL without the /api suffix
-    const baseUrl = API_URL.endsWith('/api') 
-      ? API_URL.substring(0, API_URL.length - 4) 
-      : API_URL.replace('/api', '');
-    
+  // Get the base URL without /api
+  const baseUrl = API_URL.replace('/api', '');
+  
+  // If the URL starts with a slash, append it to the base URL
+  if (url.startsWith('/')) {
     return `${baseUrl}${url}`;
   }
   
-  // Otherwise, return the URL as-is
-  return url;
+  // Otherwise, treat it as a relative path
+  return `${baseUrl}/${url}`;
 }

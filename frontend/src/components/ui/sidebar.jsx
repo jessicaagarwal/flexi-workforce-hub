@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useState } from 'react';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { cn } from '@/lib/utils';
+import { ChevronLeft } from 'lucide-react';
 
 const SidebarContext = createContext({
   expanded: false,
@@ -36,21 +36,32 @@ export const SidebarProvider = ({ children }) => {
 
 // Exported as named export for TS/routes compatibility
 export const Sidebar = ({ className, children, ...props }) => {
-  const { expanded, isMobile } = useSidebar();
+  const { expanded, isMobile, mobileExpanded } = useSidebar();
   
   return (
-    <aside
-      className={cn(
-        "group relative flex h-screen flex-col overflow-y-auto border-r bg-sidebar text-sidebar-foreground",
-        expanded ? "w-64" : "w-16",
-        isMobile && !expanded && "w-0",
-        isMobile && "absolute inset-y-0 left-0 z-50 transition-all duration-300 ease-in-out",
-        className
+    <>
+      {/* Mobile Overlay */}
+      {isMobile && mobileExpanded && (
+        <div className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-200" />
       )}
-      {...props}
-    >
-      {children}
-    </aside>
+      
+      <aside
+        id="main-sidebar"
+        className={cn(
+          "group relative flex h-screen flex-col border-r bg-sidebar text-sidebar-foreground",
+          "transition-all duration-300 ease-in-out",
+          expanded ? "w-64" : "w-20",
+          isMobile && "fixed inset-y-0 left-0 z-50",
+          isMobile && !mobileExpanded && "translate-x-[-100%]",
+          "[&_.sidebar-expanded-only]:transition-opacity [&_.sidebar-expanded-only]:duration-200",
+          expanded ? "[&_.sidebar-expanded-only]:opacity-100" : "[&_.sidebar-expanded-only]:opacity-0 [&_.sidebar-expanded-only]:invisible",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </aside>
+    </>
   );
 };
 
@@ -61,7 +72,8 @@ export const SidebarHeader = ({ className, ...props }) => {
     <div
       className={cn(
         "flex h-14 items-center border-b px-4",
-        expanded ? "justify-between" : "justify-center",
+        expanded ? "justify-between" : "justify-start",
+        "relative",
         className
       )}
       {...props}
@@ -121,9 +133,10 @@ export const SidebarMenuButton = React.forwardRef(
       <Comp ref={ref} {...props}>
         <div
           className={cn(
-            "group flex cursor-pointer items-center rounded-md px-2 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            "group flex cursor-pointer items-center rounded-md px-2 py-2",
+            "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
-            !expanded && "justify-center",
+            !expanded && "justify-center mx-auto w-full",
             className
           )}
           {...childProps}
@@ -159,13 +172,20 @@ export const SidebarTrigger = ({ className, ...props }) => {
   return (
     <button
       className={cn(
-        "absolute -right-3 top-10 flex h-6 w-6 items-center justify-center rounded-full border bg-card text-card-foreground shadow-md hover:bg-accent hover:text-accent-foreground",
+        "absolute -right-4 flex h-7 w-7 items-center justify-center",
+        "rounded-full border bg-background shadow-md",
+        "hover:bg-accent hover:text-accent-foreground",
+        "focus:outline-none focus:ring-2 focus:ring-primary",
+        "transition-transform duration-200",
+        expanded ? "rotate-0" : "rotate-180",
+        "top-3.5",
+        "z-50",
         className
       )}
       onClick={handleClick}
       {...props}
     >
-      {expanded ? "←" : "→"}
+      <ChevronLeft className="h-4 w-4" />
     </button>
   );
 };
